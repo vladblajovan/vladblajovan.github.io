@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vlad Blajovan</title>
   <meta name="description" content="iOS developer building privacy-first apps." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -12,7 +15,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
           },
         },
       },
@@ -28,6 +31,46 @@
     .delay-2 { animation-delay: 0.2s; }
     .delay-3 { animation-delay: 0.3s; }
     .delay-4 { animation-delay: 0.4s; }
+
+    @keyframes gradient-rotate {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .animate-gradient {
+      background-size: 200% 200%;
+      animation: gradient-rotate 8s ease infinite;
+    }
+
+    @keyframes gradient-glow {
+      0%   { box-shadow: 0 0 30px rgba(10,149,194,0.35), 0 0 60px rgba(10,149,194,0.15); }
+      50%  { box-shadow: 0 0 30px rgba(5,86,166,0.35),  0 0 60px rgba(5,86,166,0.15); }
+      100% { box-shadow: 0 0 30px rgba(10,149,194,0.35), 0 0 60px rgba(10,149,194,0.15); }
+    }
+    .animate-gradient-glow {
+      animation: gradient-glow 8s ease infinite;
+    }
+
+    /* Gradient border on Ritualist card */
+    .gradient-border {
+      position: relative;
+      background-clip: padding-box;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, #0A95C2, #0556A6, #0A95C2);
+      background-size: 200% 200%;
+      animation: gradient-rotate 8s ease infinite;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .gradient-border:hover::before {
+      opacity: 1;
+    }
   </style>
   <script>document.documentElement.classList.add('dark')</script>
 </head>
@@ -35,15 +78,17 @@
 
   <!-- Nav -->
   <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/60 bg-black/80 backdrop-blur-md">
-    <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-      <span class="text-sm font-semibold tracking-tight text-white">vlad blajovan</span>
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <span class="text-sm font-semibold tracking-tight">
+        <span class="bg-gradient-to-r from-[#0A95C2] to-[#0556A6] bg-clip-text text-transparent">vlad blajovan</span>
+      </span>
       <a href="mailto:vlad.blajovan@outlook.com" class="rounded-full border border-zinc-700 px-4 py-1.5 text-sm text-zinc-300 transition hover:border-zinc-400 hover:text-white">
         Get in touch
       </a>
     </div>
   </nav>
 
-  <main class="mx-auto max-w-4xl px-6 pt-32 pb-24">
+  <main class="mx-auto max-w-5xl px-6 pt-32 pb-24">
 
     <!-- Hero -->
     <section class="mb-24 fade-in">
@@ -86,15 +131,20 @@
       <div class="grid gap-4 sm:grid-cols-2">
 
         <!-- Ritualist -->
-        <a href="https://vladblajovan.github.io/RitualistWebsite/" target="_blank" rel="noopener noreferrer"
-          class="group rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-zinc-600 hover:bg-zinc-800/80">
+        <a href="https://ritualist.app" target="_blank" rel="noopener noreferrer"
+          class="gradient-border group rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-transparent hover:bg-zinc-800/80">
           <div class="mb-4 flex items-center justify-between">
-            <span class="text-2xl">🔁</span>
+            <!-- Ritualist "R" icon matching brand gradient -->
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#0A95C2] to-[#0556A6] animate-gradient-glow">
+              <span class="text-lg font-bold text-white">R</span>
+            </div>
             <svg class="h-4 w-4 text-zinc-600 transition group-hover:text-zinc-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/>
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-white">Ritualist</h3>
+          <h3 class="mb-2 text-lg font-semibold">
+            <span class="bg-gradient-to-r from-[#0A95C2] to-[#0556A6] bg-clip-text text-transparent">Ritualist</span>
+          </h3>
           <p class="mb-4 text-sm text-zinc-400 leading-relaxed">
             Privacy-first habit tracker for iOS. AI-powered insights, location reminders, and beautiful analytics — no social pressure.
           </p>
@@ -133,7 +183,7 @@
         Got a question, a project idea, or just want to say hi? Drop me a line.
       </p>
       <a href="mailto:vlad.blajovan@outlook.com"
-        class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200">
+        class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#0A95C2] to-[#0556A6] animate-gradient px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90">
         vlad.blajovan@outlook.com
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/>
@@ -145,7 +195,7 @@
 
   <!-- Footer -->
   <footer class="border-t border-zinc-800 px-6 py-8">
-    <div class="mx-auto flex max-w-4xl items-center justify-between text-xs text-zinc-600">
+    <div class="mx-auto flex max-w-5xl items-center justify-between text-xs text-zinc-600">
       <span>© 2026 Vlad Blajovan</span>
       <span>Built with care.</span>
     </div>
