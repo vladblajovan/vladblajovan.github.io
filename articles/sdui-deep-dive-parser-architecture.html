@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="alternate icon" href="/favicon.jpeg" type="image/jpeg"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
+  <title>Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield - Vlad Blajovan</title>
+  <meta name="description" content="A technical deep dive into SDUI parser architecture: component registries, recursive rendering, the Visitor pattern, and where OpenAPI code generators break with UI schemas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] } } },
+    }
+  </script>
+  <style>
+    @keyframes fade-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fade-in 0.6s ease both; }
+    @media (prefers-reduced-motion: reduce) { .fade-in { animation: none; opacity: 1; } }
+    .article-body h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem; line-height: 1.3; scroll-margin-top: 7rem; }
+    html { scroll-behavior: smooth; }
+    .article-body h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; line-height: 1.4; }
+    .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
+    .article-body ul, .article-body ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    .article-body li { margin-bottom: 0.5rem; line-height: 1.7; }
+    .article-body blockquote { border-left: 3px solid; padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 0.5rem 0.5rem 0; }
+    .article-body code { font-size: 0.875em; padding: 0.15em 0.4em; border-radius: 0.25rem; }
+    .article-body pre code { padding: 0; }
+    .article-body hr { margin: 2.5rem 0; border: none; border-top: 1px solid; }
+    .article-body strong { font-weight: 600; }
+    .toc-link.active { color: #18181b; border-left-color: #18181b; font-weight: 500; }
+    .dark .toc-link.active { color: #ffffff; border-left-color: #ffffff; }
+    #toc::-webkit-scrollbar { width: 3px; }
+    #toc::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    .dark #toc::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); }
+  </script>
+</head>
+<body class="bg-white text-zinc-900 antialiased dark:bg-black dark:text-white">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <button onclick="toggleTheme()" aria-label="Toggle theme" class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
+          <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+          <svg class="h-4 w-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+        </button>
+      </div>
+      <div class="flex md:hidden items-center gap-2">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+          <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
+      <div class="flex flex-col px-6 py-4 space-y-4">
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-6 pt-32 pb-24">
+    <div class="fade-in">
+      <a href="/articles.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-8">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Back to Articles
+      </a>
+      <div class="relative lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <aside class="hidden lg:block">
+          <nav id="toc" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">Contents</h4>
+            <ul class="space-y-2 text-sm border-l border-zinc-200 dark:border-zinc-800">
+              <li><a href="#big-switch" data-target="big-switch" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">The Big Switch</a></li>
+              <li><a href="#component-registry" data-target="component-registry" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Component Registry</a></li>
+              <li><a href="#visitor-pattern" data-target="visitor-pattern" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Visitor Pattern</a></li>
+              <li><a href="#nested-components" data-target="nested-components" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Nested Components</a></li>
+              <li><a href="#openapi-pitfalls" data-target="openapi-pitfalls" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">OpenAPI Pitfalls</a></li>
+              <li><a href="#parser-architecture" data-target="parser-architecture" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Parser Architecture</a></li>
+              <li><a href="#testing-parser" data-target="testing-parser" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Testing the Parser</a></li>
+              <li><a href="#decision-framework" data-target="decision-framework" class="toc-link block pl-4 py-0.5 border-l-2 border-transparent text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Decision Framework</a></li>
+            </ul>
+          </nav>
+        </aside>
+        <div class="max-w-3xl">
+          <header class="mb-12">
+            <h1 class="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4">Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+              <span>Vlad Blajovan</span>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <time datetime="2026-03-08">March 8, 2026</time>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <span>~20 min read</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Server-Driven UI</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+            </div>
+          </header>
+          <article class="article-body text-zinc-700 dark:text-zinc-300">
+
+            <p><em>This is a companion piece to the main Server-Driven UI article. It addresses the hard engineering problems that surface once you move beyond the concept and start building: how to parse and render a recursive component tree without a sprawling switch statement, how to handle deeply nested compositions, and where OpenAPI code generators break when your schema describes UI rather than REST resources.</em></p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="big-switch" class="text-zinc-900 dark:text-white">The Problem With the Big Switch</h2>
+
+            <p>Every SDUI tutorial starts the same way. The server sends a JSON tree. The client parses it. And somewhere in the codebase, there's a function that takes a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> string and returns a view:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>// The brute-force approach — every tutorial, every blog post
+func buildComponent(from component: UIComponent) -&gt; some View {
+    switch component.type {
+    case "header_card":
+        return AnyView(HeaderCardView(data: component.properties))
+    case "product_carousel":
+        return AnyView(ProductCarouselView(data: component.properties))
+    case "action_list":
+        return AnyView(ActionListView(data: component.properties))
+    case "banner":
+        return AnyView(BannerView(data: component.properties))
+    case "badge":
+        return AnyView(BadgeView(data: component.properties))
+    // ... 47 more cases
+    default:
+        return AnyView(EmptyView())
+    }
+}</code></pre>
+
+            <p>This works for a demo with five components. It collapses under its own weight at thirty. By fifty, the switch statement is hundreds of lines long, lives in a single file that every team member touches, generates merge conflicts constantly, and is impossible to unit test in isolation. Adding a new component means modifying this central function, which means rebuilding the module it lives in, retesting everything, and hoping nobody else was also adding a component in a parallel PR.</p>
+
+            <p>The problem is structural: the switch couples <em>discovery</em> (which component type is this?) to <em>rendering</em> (how do I draw it?) in a single monolithic function. And it uses <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">AnyView</code> type erasure, which destroys SwiftUI's ability to diff the view hierarchy efficiently.</p>
+
+            <p>This is the brute-force parser. It's the thing that every scalable SDUI system needs to replace.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="component-registry" class="text-zinc-900 dark:text-white">The Type-Safe Alternative: Component Registry With Protocol Conformance</h2>
+
+            <p>The well-established pattern that eliminates the switch is the <strong>component registry</strong> — a dictionary that maps type strings to factory functions, combined with a protocol (or interface) that every component conforms to. This is a direct application of the <strong>Strategy pattern</strong> backed by a <strong>registry map</strong>, and it's the same pattern used by plugin architectures, dependency injection containers, and serialization frameworks.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">The Architecture</h3>
+
+            <p>Instead of one function that knows about every component, you have three things:</p>
+
+            <ol class="list-decimal">
+              <li><strong>A protocol</strong> that defines what every component renderer must provide.</li>
+              <li><strong>Individual renderers</strong> — one per component type — each conforming to the protocol.</li>
+              <li><strong>A registry</strong> — a dictionary that maps <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> strings to renderer instances or factories.</li>
+            </ol>
+
+            <p>The renderer walks the component tree, looks up each <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> in the registry, and delegates rendering to the registered factory. No switch. No centralized knowledge of component types. Adding a new component means creating a new renderer and registering it — nothing else changes.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Swift Implementation</h3>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>// 1. The protocol — every component renderer conforms to this
+protocol ComponentRenderer {
+    associatedtype Body: View
+    func render(properties: [String: Any], children: [UIComponentNode]) -&gt; Body
+}
+
+// Type-erased wrapper for the registry (needed because of associatedtype)
+struct AnyComponentRenderer {
+    private let _render: ([String: Any], [UIComponentNode]) -&gt; AnyView
+
+    init&lt;R: ComponentRenderer&gt;(_ renderer: R) {
+        _render = { props, children in
+            AnyView(renderer.render(properties: props, children: children))
+        }
+    }
+
+    func render(properties: [String: Any], children: [UIComponentNode]) -&gt; AnyView {
+        _render(properties, children)
+    }
+}
+
+// 2. Individual renderers — self-contained, testable in isolation
+struct HeaderCardRenderer: ComponentRenderer {
+    func render(properties: [String: Any], children: [UIComponentNode]) -&gt; some View {
+        HeaderCardView(
+            title: properties["title"] as? String ?? "",
+            subtitle: properties["subtitle"] as? String,
+            imageURL: properties["image_url"] as? String
+        )
+    }
+}
+
+struct ActionListRenderer: ComponentRenderer {
+    func render(properties: [String: Any], children: [UIComponentNode]) -&gt; some View {
+        ActionListView(items: children)
+    }
+}
+
+// 3. The registry — a dictionary, not a switch
+final class ComponentRegistry {
+    static let shared = ComponentRegistry()
+
+    private var renderers: [String: AnyComponentRenderer] = [:]
+
+    func register&lt;R: ComponentRenderer&gt;(_ renderer: R, for type: String) {
+        renderers[type] = AnyComponentRenderer(renderer)
+    }
+
+    func renderer(for type: String) -&gt; AnyComponentRenderer? {
+        renderers[type]
+    }
+}
+
+// Registration happens at startup — declarative, modular
+func registerComponents() {
+    let registry = ComponentRegistry.shared
+    registry.register(HeaderCardRenderer(), for: "header_card")
+    registry.register(ActionListRenderer(), for: "action_list")
+    registry.register(ProductCarouselRenderer(), for: "product_carousel")
+    registry.register(BannerRenderer(), for: "banner")
+    // Each team can register their own components
+}</code></pre>
+
+            <h3 class="text-zinc-900 dark:text-white">Why This Scales</h3>
+
+            <p>Adding a new component type is a purely additive operation: create a new file with the renderer, add one <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">registry.register(...)</code> call. No existing code changes. No merge conflicts. No rebuilding the world.</p>
+
+            <p>Each renderer is independently testable — you can instantiate it with mock properties and verify its output without involving the registry or any other component.</p>
+
+            <p>Teams can own their own components. The payments team registers <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">PaymentCardRenderer</code>. The social team registers <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UserProfileRenderer</code>. They never touch each other's code.</p>
+
+            <p>The registry can be configured differently per context: the main app registers all components, a widget extension registers a subset, a testing target registers mock renderers that return simplified views.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Kotlin Sealed Classes + Registry Hybrid</h3>
+
+            <p>Kotlin offers an interesting middle ground with sealed classes. A sealed class hierarchy gives you exhaustive <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">when</code> matching (the compiler warns if you miss a case), which is safer than a dictionary lookup that can fail at runtime. But pure sealed classes still centralize rendering in a single <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">when</code> expression.</p>
+
+            <p>The hybrid approach uses sealed classes for the data model (parsing) and a registry map for rendering:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>// Sealed hierarchy for type-safe parsing
+sealed class UIComponent {
+    abstract val id: String
+    abstract val children: List&lt;UIComponent&gt;
+
+    data class HeaderCard(
+        override val id: String,
+        val title: String,
+        val subtitle: String?,
+        override val children: List&lt;UIComponent&gt; = emptyList()
+    ) : UIComponent()
+
+    data class ActionList(
+        override val id: String,
+        override val children: List&lt;UIComponent&gt;
+    ) : UIComponent()
+
+    // Each new type: add a data class here (compile-time safety)
+    // AND register a renderer (runtime flexibility)
+}
+
+// Registry for rendering — decoupled from the data model
+object ComponentRendererRegistry {
+    private val renderers = mutableMapOf&lt;KClass&lt;out UIComponent&gt;, @Composable (UIComponent) -&gt; Unit&gt;()
+
+    inline fun &lt;reified T : UIComponent&gt; register(noinline renderer: @Composable (T) -&gt; Unit) {
+        renderers[T::class] = { component -&gt; renderer(component as T) }
+    }
+
+    @Composable
+    fun Render(component: UIComponent) {
+        val renderer = renderers[component::class]
+        if (renderer != null) {
+            renderer(component)
+        } else {
+            FallbackComponent(component)
+        }
+    }
+}</code></pre>
+
+            <p>Kotlin's exhaustive <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">when</code> still serves a purpose — use it in the deserializer, where you need to parse JSON into the correct sealed subclass based on the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> discriminator. The compiler guarantees you handle every known type during parsing. Then the registry handles rendering, where you want decoupled, modular factories rather than a monolithic switch.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Flutter Registry</h3>
+
+            <p>In Dart/Flutter, the registry is a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Map&lt;String, Widget Function(Map&lt;String, dynamic&gt;, List&lt;Widget&gt;)&gt;</code>:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>typedef ComponentBuilder = Widget Function(
+  Map&lt;String, dynamic&gt; properties,
+  List&lt;Widget&gt; children,
+);
+
+class ComponentRegistry {
+  final Map&lt;String, ComponentBuilder&gt; _builders = {};
+
+  void register(String type, ComponentBuilder builder) {
+    _builders[type] = builder;
+  }
+
+  Widget build(String type, Map&lt;String, dynamic&gt; properties, List&lt;Widget&gt; children) {
+    final builder = _builders[type];
+    if (builder != null) {
+      return builder(properties, children);
+    }
+    return const SizedBox.shrink(); // Unknown component fallback
+  }
+}
+
+// Registration
+final registry = ComponentRegistry()
+  ..register('header_card', (props, children) =&gt; HeaderCard(
+      title: props['title'] as String,
+      subtitle: props['subtitle'] as String?,
+    ))
+  ..register('action_list', (props, children) =&gt; ActionList(children: children))
+  ..register('product_carousel', (props, children) =&gt; ProductCarousel(
+      items: (props['items'] as List).cast&lt;Map&lt;String, dynamic&gt;&gt;(),
+    ));</code></pre>
+
+            <p>With Dart 3's sealed classes and pattern matching, you can also get exhaustive parsing similar to Kotlin, then delegate to the registry for rendering.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">React Native Registry</h3>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>type ComponentFactory = (
+  props: Record&lt;string, unknown&gt;,
+  children: React.ReactNode[]
+) =&gt; React.ReactElement;
+
+const registry = new Map&lt;string, ComponentFactory&gt;();
+
+registry.set('header_card', (props, children) =&gt; (
+  &lt;HeaderCard title={props.title as string} subtitle={props.subtitle as string} /&gt;
+));
+
+registry.set('action_list', (props, children) =&gt; (
+  &lt;ActionList&gt;{children}&lt;/ActionList&gt;
+));
+
+// The renderer — generic, never changes
+const RenderComponent: React.FC&lt;{ node: UIComponentNode }&gt; = ({ node }) =&gt; {
+  const factory = registry.get(node.type);
+  if (!factory) return null;
+
+  const childElements = (node.children ?? []).map((child, i) =&gt; (
+    &lt;RenderComponent key={child.id ?? i} node={child} /&gt;
+  ));
+
+  return factory(node.properties ?? {}, childElements);
+};</code></pre>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="visitor-pattern" class="text-zinc-900 dark:text-white">The Visitor Pattern: When Tree Traversal Gets Complex</h2>
+
+            <p>The component registry handles the common case: walk the tree, look up each type, render it. But when you need to perform <em>multiple different operations</em> on the same component tree — rendering, accessibility auditing, analytics extraction, layout measurement, serialization back to JSON — the <strong>Visitor pattern</strong> becomes the right tool.</p>
+
+            <p>The Visitor pattern separates the algorithm (what you do with each component) from the structure (the component tree itself). Each component accepts a visitor, and the visitor has a method for each component type. Adding a new operation means adding a new visitor — no changes to the component classes. Adding a new component type means adding a method to each visitor — the compiler tells you exactly where.</p>
+
+            <p>This is particularly powerful for SDUI because the same component tree is used for multiple purposes: rendering to native views, extracting accessibility labels for testing, generating analytics impressions, validating schema compliance, and serializing modifications back to the server.</p>
+
+            <p>In practice, most teams use the registry for rendering (the hot path) and the Visitor for cross-cutting concerns (accessibility audits, analytics extraction, schema validation). They're complementary, not competing.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="nested-components" class="text-zinc-900 dark:text-white">Nested Components: The Recursive Tree</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">The Core Challenge</h3>
+
+            <p>Real SDUI schemas are trees, not flat lists. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Section</code> contains <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code>s. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ProductCard</code> contains a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Badge</code>, an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Image</code>, a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">PriceLabel</code>, and an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ActionButton</code>. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">FormSection</code> contains <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">FormField</code>s, each of which may contain a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ValidationIndicator</code>. Nesting can go arbitrarily deep.</p>
+
+            <p>The component tree must be parsed recursively and rendered recursively. The parser encounters a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">product_card</code>, parses its properties, then discovers it has <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">children</code> — which are themselves components that must be parsed the same way. The renderer encounters a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">product_card</code>, renders its shell, then renders its children inside that shell — each child rendered by the same registry lookup mechanism.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Recursive Parsing</h3>
+
+            <p>Your <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponentNode</code> model must be self-referential:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>struct UIComponentNode: Codable {
+    let type: String
+    let id: String?
+    let properties: [String: AnyCodable]?
+    let children: [UIComponentNode]?  // Recursive — nodes contain nodes
+    let action: UIAction?
+}</code></pre>
+
+            <p>The parser walks this tree depth-first. At each node, it looks up the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> in the registry, passes the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">properties</code>, and recursively renders the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">children</code> as the child views of the current component.</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>// The recursive renderer — works for any depth
+struct ComponentTreeRenderer: View {
+    let node: UIComponentNode
+    let registry: ComponentRegistry
+
+    var body: some View {
+        if let renderer = registry.renderer(for: node.type) {
+            let childViews = (node.children ?? []).map { child in
+                ComponentTreeRenderer(node: child, registry: registry)
+            }
+            renderer.render(
+                properties: node.properties?.rawValue ?? [:],
+                children: childViews
+            )
+        }
+    }
+}</code></pre>
+
+            <h3 class="text-zinc-900 dark:text-white">Depth Limits and Cycle Detection</h3>
+
+            <p>An arbitrarily deep tree can cause stack overflows in recursive renderers and exponential layout computation in deeply nested constraint systems. Enforce a maximum depth (typically 10–15 levels is more than enough for any reasonable UI) and reject or truncate responses that exceed it.</p>
+
+            <p>If your schema allows components to reference other components by ID (a form of indirection), you also need cycle detection to prevent infinite loops. A component that references itself (directly or transitively) must be caught at parse time.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Children vs Slots</h3>
+
+            <p>Not all children are equal. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ProductCard</code> doesn't just have a generic list of children — it has a <em>header</em> slot, a <em>body</em> slot, and a <em>footer</em> slot, each accepting specific component types:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>ProductCard:
+  type: object
+  properties:
+    type:
+      type: string
+      enum: [product_card]
+    slots:
+      type: object
+      properties:
+        header:
+          $ref: '#/components/schemas/UIComponent'
+        body:
+          type: array
+          items:
+            $ref: '#/components/schemas/UIComponent'
+        footer:
+          $ref: '#/components/schemas/UIComponent'
+        badge:
+          $ref: '#/components/schemas/UIComponent'</code></pre>
+
+            <p>Named slots give the parent component control over where each child renders, rather than treating children as a flat list. The renderer unpacks slots by name and places each child in its designated area.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="openapi-pitfalls" class="text-zinc-900 dark:text-white">OpenAPI Code Generator Pitfalls</h2>
+
+            <p>OpenAPI is powerful for defining SDUI schemas. OpenAPI code generators are <em>fragile</em> when those schemas use the patterns SDUI requires: discriminated unions, recursive types, deeply nested <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code>, and polymorphic arrays. Here are the specific problems you'll hit and how to work around them.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 1: Discriminated Unions (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> + <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">discriminator</code>)</h3>
+
+            <p>SDUI schemas rely heavily on discriminated unions — a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code> is a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> that could be a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">HeaderCard</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ProductCarousel</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Banner</code>, etc., distinguished by a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> property. OpenAPI 3.1 supports this with <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">discriminator.mapping</code>.</p>
+
+            <p><strong>What breaks:</strong> Many code generators handle <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> poorly. Some generate a single flat struct with all possible properties as optionals (losing type safety entirely). Others generate the correct types but produce broken deserialization code that doesn't actually read the discriminator value. Swift's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">swift-openapi-generator</code> handles discriminators reasonably well but produces verbose code. Kotlin's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">openapi-generator</code> often generates a generic <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">OneOfXyz</code> wrapper instead of proper sealed class hierarchies.</p>
+
+            <p><strong>Workaround:</strong> Generate the models, then hand-write or post-process the deserialization. Use the generated types (the data classes/structs themselves are usually correct) but replace the generated decoder with a custom one that reads the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> discriminator and dispatches to the correct type's decoder. In Kotlin, map the generated classes to a sealed class hierarchy manually or use a Moshi/Kotlinx.serialization polymorphic adapter. In Swift, write a custom <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">init(from decoder:)</code> that peeks at the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> key.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 2: Recursive Types (Self-Referential Schemas)</h3>
+
+            <p>A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponentNode</code> with a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">children: [UIComponentNode]</code> property is recursive. OpenAPI handles this with <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">$ref</code> — a component references itself:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>UIComponentNode:
+  type: object
+  properties:
+    children:
+      type: array
+      items:
+        $ref: '#/components/schemas/UIComponentNode'</code></pre>
+
+            <p><strong>What breaks:</strong> Some generators enter infinite loops during code generation. Others generate the type correctly but produce broken serialization code that doesn't handle the recursion (no base case). Swift generators sometimes produce value types (structs) for recursive schemas, which Swift doesn't support — you need reference types (classes) or indirect enums.</p>
+
+            <p><strong>Workaround:</strong> If your generator can't handle recursive types, break the recursion with an intermediate type. Instead of <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">children: [UIComponentNode]</code>, define <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">children: [UIComponentRef]</code> where <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponentRef</code> is a simple wrapper. Or exclude recursive fields from generation and add them manually as lazy/indirect properties.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 3: Deeply Nested <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> / <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">anyOf</code></h3>
+
+            <p>When a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code> (itself a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code>) contains children that are also <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code>s (also <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code>), you get nested polymorphism. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Section</code> contains a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf UIComponent</code> array. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ProductCard</code> (one variant of <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code>) has slots that are each a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf UIComponent</code>. This nesting of union types inside union types is where most generators produce incorrect, uncompilable, or wildly over-complicated code.</p>
+
+            <p><strong>What breaks:</strong> Generators may flatten the nested unions into a single massive union, losing the structural hierarchy. Others may generate intermediate wrapper types for each nesting level (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponentOneOf</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponentOneOfOneOf</code>), creating an unusable API surface. Discriminator mappings often don't propagate correctly through nesting levels — the inner <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> loses its discriminator.</p>
+
+            <p><strong>Workaround:</strong> Define the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code> union exactly once in your schema and reference it everywhere with <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">$ref</code>. Never inline the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> at the point of use. This gives generators a single, canonical definition to work with:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code># GOOD — single definition, referenced everywhere
+ProductCard:
+  properties:
+    badge:
+      $ref: '#/components/schemas/UIComponent'   # References the canonical union
+    footer:
+      $ref: '#/components/schemas/UIComponent'
+
+# BAD — inlined union, generators choke
+ProductCard:
+  properties:
+    badge:
+      oneOf:                                      # Don't do this
+        - $ref: '#/components/schemas/Badge'
+        - $ref: '#/components/schemas/Icon'</code></pre>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 4: Semantic Token Enums With Platform Mapping</h3>
+
+            <p>Your schema uses semantic enums (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">SemanticColor: primary | secondary | accent | ...</code>). Generators produce the enum correctly, but you need to map each value to a platform-specific token (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">primary</code> → <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Color.accentColor</code> on iOS, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.colorScheme.primary</code> on Android). This mapping isn't something the generator can produce — it's platform logic.</p>
+
+            <p><strong>Approach:</strong> Generate the enum. Then write a platform-specific extension that maps each case to the native token. This extension is hand-written code that lives alongside the generated code. Never modify generated files directly — they'll be overwritten on the next generation run.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 5: Action Schema Polymorphism</h3>
+
+            <p>The <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIAction</code> union (navigate, open URL, API call, dismiss, etc.) is another discriminated union that generators struggle with, particularly when actions are nested (an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">APICallAction</code> has <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">on_success</code> and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">on_error</code> fields that are themselves <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIAction</code>s — recursive polymorphism).</p>
+
+            <p><strong>Workaround:</strong> Same as Problem 2 — break the recursion if your generator can't handle it, and hand-write the deserialization for action chains.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Problem 6: The <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">additionalProperties</code> Trap</h3>
+
+            <p>SDUI component properties are often semi-structured — you know some fields (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">title</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">subtitle</code>) but want to pass through unknown fields for forward compatibility. Using <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">additionalProperties: true</code> in OpenAPI is the correct schema declaration, but generators handle it inconsistently. Some ignore additional properties entirely. Others generate a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Map&lt;String, Any&gt;</code> that loses all type safety for the known fields.</p>
+
+            <p><strong>Approach:</strong> Define all known properties explicitly in the schema. Use <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">additionalProperties: true</code> for forward compatibility but don't rely on generators to produce useful code for the additional properties. Access them through a raw dictionary alongside the typed model.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">The Pragmatic Strategy</h3>
+
+            <p>For SDUI schemas, the most productive approach to code generation is:</p>
+
+            <ol class="list-decimal">
+              <li><strong>Generate the data models</strong> (structs, data classes, interfaces) — these are usually correct.</li>
+              <li><strong>Hand-write the deserialization</strong> for polymorphic types (the discriminated unions) using your platform's serialization library directly (Kotlinx.serialization with <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">@Polymorphic</code>, Swift's custom <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Codable</code>, Dart's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">json_serializable</code> with custom converters).</li>
+              <li><strong>Hand-write the registry</strong> (the mapping from types to renderers) — this is application logic, not something a schema generator should produce.</li>
+              <li><strong>Generate the API client</strong> (the networking layer) — this is what OpenAPI generators do best.</li>
+            </ol>
+
+            <p>Treat the OpenAPI spec as the <em>source of truth for the contract</em> but not as the sole <em>source of generated code</em>. Some parts generate well. Some parts need human engineering. Knowing which is which saves weeks of fighting generators.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="parser-architecture" class="text-zinc-900 dark:text-white">Parser Architecture: Putting It All Together</h2>
+
+            <p>The complete parser pipeline for a production SDUI system has five stages:</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Stage 1: Network Response Validation</h3>
+
+            <p>Before parsing, validate the raw JSON/data against basic structural requirements: is it valid JSON? Does it have the expected top-level fields (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">screen</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">sections</code>)? Is the response size within acceptable limits? Is the nesting depth within bounds?</p>
+
+            <p>Reject malformed responses early with clear error reporting. Don't let a corrupted response crash the parser in Stage 3.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Stage 2: Schema Deserialization</h3>
+
+            <p>Deserialize the raw JSON into your typed model hierarchy. This is where the discriminated union parsing happens — reading the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> field and dispatching to the correct subtype's deserializer.</p>
+
+            <p>For known types, this produces strongly-typed model objects (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">HeaderCard</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ProductCarousel</code>, etc.). For unknown types (component types the client doesn't recognize), produce a generic <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UnknownComponent</code> with the raw JSON preserved — this allows the renderer to apply fallback behavior rather than crashing.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Stage 3: Tree Validation and Transformation</h3>
+
+            <p>After deserialization, walk the component tree and validate: are required properties present? Are enum values within expected ranges? Are action destinations within the allowed navigation graph? Are image URLs using HTTPS?</p>
+
+            <p>This is also where you apply transformations: resolving semantic tokens against the current theme, filtering components based on client capabilities or feature flags, and injecting analytics tracking metadata.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Stage 4: Registry Lookup and View Construction</h3>
+
+            <p>Walk the validated tree and construct the native view hierarchy using the component registry. Each node looks up its renderer, passes its properties and recursively-constructed children, and receives a native view in return.</p>
+
+            <p>Unknown components hit the fallback path: skip, placeholder, or upgrade prompt, based on the component's declared <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">fallback</code> behavior.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Stage 5: Layout and Display</h3>
+
+            <p>The constructed view hierarchy is handed to the platform's layout engine (Auto Layout, Compose layout, Flutter's rendering pipeline) for measurement and display. The SDUI system's job is done — from here, it's standard platform rendering.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Error Propagation</h3>
+
+            <p>Each stage can fail. The architecture should support graceful degradation at every level:</p>
+
+            <ul class="list-disc">
+              <li>Network failure → show cached screen</li>
+              <li>Deserialization failure on one component → skip that component, render the rest</li>
+              <li>Validation failure → substitute a safe default or hide the section</li>
+              <li>Registry miss → apply fallback behavior</li>
+              <li>Rendering failure → show an error placeholder for that component</li>
+            </ul>
+
+            <p>Never let a single component failure crash the entire screen. The tree structure makes this natural — each node is an independent unit that can succeed or fail independently.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="testing-parser" class="text-zinc-900 dark:text-white">Testing the Parser</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Unit Tests for Individual Renderers</h3>
+
+            <p>Each renderer, registered independently in the registry, is testable in isolation. Provide mock properties, render the output, and assert on the result. No other component types need to exist.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Integration Tests for the Full Pipeline</h3>
+
+            <p>Feed representative JSON responses through the complete pipeline (Stages 1–4) and verify that the correct view hierarchy is produced. Use snapshot tests to capture the rendered output and detect visual regressions.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Contract Tests Against the OpenAPI Spec</h3>
+
+            <p>Generate random valid responses from your OpenAPI spec (using tools like Prism or Schemathesis) and feed them through the parser. Every valid response should parse successfully. Every invalid response should fail gracefully without crashes.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Fuzz Testing for Robustness</h3>
+
+            <p>Feed malformed, truncated, deeply nested, and adversarial JSON through the parser. It should never crash, never hang, and never consume unbounded memory. Fuzz testing catches edge cases that unit tests miss — especially in the recursive parsing and cycle detection logic.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Nested Component Tests</h3>
+
+            <p>Specifically test deeply nested structures: a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Section</code> containing a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Card</code> containing a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Stack</code> containing a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Badge</code> containing an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Icon</code>. Verify that properties propagate correctly through each level, that children render in the correct order, and that actions at any nesting depth fire correctly.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="decision-framework" class="text-zinc-900 dark:text-white">Summary: The Decision Framework</h2>
+
+            <table class="w-full text-sm mb-6 border-collapse">
+              <thead>
+                <tr class="bg-zinc-100 dark:bg-zinc-800">
+                  <th class="border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-left font-semibold text-zinc-900 dark:text-white">Concern</th>
+                  <th class="border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-left font-semibold text-zinc-900 dark:text-white">Brute-Force Switch</th>
+                  <th class="border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-left font-semibold text-zinc-900 dark:text-white">Sealed Types + Exhaustive Match</th>
+                  <th class="border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-left font-semibold text-zinc-900 dark:text-white">Component Registry</th>
+                  <th class="border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-left font-semibold text-zinc-900 dark:text-white">Visitor Pattern</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Adding new components</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Modify central switch</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Add sealed subclass + match case</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Register new factory</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Add method to all visitors</td>
+                </tr>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Compile-time safety</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">None (string matching)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Full (compiler-enforced)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Partial (runtime lookup)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Full (compiler-enforced)</td>
+                </tr>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Team scalability</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Poor (merge conflicts)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Moderate (centralized match)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Excellent (decentralized)</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Moderate (cross-cutting)</td>
+                </tr>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Independent testability</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">None</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Moderate</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Excellent</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Excellent</td>
+                </tr>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Multiple operations</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Must duplicate switch</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Must duplicate match</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">One registry per operation</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">One visitor per operation</td>
+                </tr>
+                <tr>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Best for</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Prototypes</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Data model parsing</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">View rendering</td>
+                  <td class="border border-zinc-200 dark:border-zinc-700 px-3 py-2">Cross-cutting analysis</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>The production architecture uses sealed types for parsing (Stage 2), a component registry for rendering (Stage 4), and optionally the Visitor pattern for cross-cutting concerns (accessibility, analytics, validation). Each tool where it's strongest.</p>
+
+            <p>The switch statement is for demos. Ship the registry.</p>
+
+          </article>
+
+          <div class="mt-16 rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Enjoyed this article?</h3>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Follow me for more on mobile development, accessibility, and AI-assisted workflows.</p>
+            <div class="flex justify-center gap-4">
+              <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-zinc-200 px-6 py-12 dark:border-zinc-800">
+    <div class="mx-auto max-w-5xl">
+      <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-6">
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+          <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+          <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+          <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
+          <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></a>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;"></a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">&copy; 2025&ndash;<span id="year"></span> Vlad Blajovan</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    function toggleMenu() { const menu = document.getElementById('mobile-menu'); const iconMenu = document.getElementById('icon-menu'); const iconClose = document.getElementById('icon-close'); menu.classList.toggle('hidden'); iconMenu.classList.toggle('hidden'); iconClose.classList.toggle('hidden'); }
+    function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+    (function() {
+      var headings = document.querySelectorAll('.article-body h2[id]');
+      var tocLinks = document.querySelectorAll('.toc-link');
+      if (!headings.length || !tocLinks.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(link) { link.classList.remove('active'); });
+            var active = document.querySelector('.toc-link[data-target="' + entry.target.id + '"]');
+            if (active) active.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -75% 0px', threshold: 0 });
+      headings.forEach(function(h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

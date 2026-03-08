@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="alternate icon" href="/favicon.jpeg" type="image/jpeg"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
+  <title>The Claude Code Crash Course: From First Prompt to Autonomous Development Loops - Vlad Blajovan</title>
+  <meta name="description" content="Everything a developer needs to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, Remote Control, agent teams, and multi-device orchestration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fade-in 0.6s ease both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { animation: none; opacity: 1; }
+    }
+
+    .article-body h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.3;
+      scroll-margin-top: 7rem;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .article-body h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .article-body p {
+      margin-bottom: 1.25rem;
+      line-height: 1.8;
+    }
+
+    .article-body ul, .article-body ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+
+    .article-body li {
+      margin-bottom: 0.5rem;
+      line-height: 1.7;
+    }
+
+    .article-body blockquote {
+      border-left: 3px solid;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .article-body code {
+      font-size: 0.875em;
+      padding: 0.15em 0.4em;
+      border-radius: 0.25rem;
+    }
+
+    .article-body pre code {
+      padding: 0;
+    }
+
+    .article-body hr {
+      margin: 2.5rem 0;
+      border: none;
+      border-top: 1px solid;
+    }
+
+    .article-body strong {
+      font-weight: 600;
+    }
+
+    .toc-link.active {
+      color: #18181b;
+      border-left-color: #18181b;
+      font-weight: 500;
+    }
+    .dark .toc-link.active {
+      color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    #toc::-webkit-scrollbar { width: 3px; }
+    #toc::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    .dark #toc::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-white text-zinc-900 antialiased dark:bg-black dark:text-white">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
+      <!-- Desktop nav -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <button onclick="toggleTheme()" aria-label="Toggle theme"
+          class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
+          <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <svg class="h-4 w-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Mobile: hamburger -->
+      <div class="flex md:hidden items-center gap-2">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+          <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+          </svg>
+          <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
+      <div class="flex flex-col px-6 py-4 space-y-4">
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-6 pt-32 pb-24">
+    <div class="fade-in">
+      <!-- Back link -->
+      <a href="/articles.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-8">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+        </svg>
+        Back to Articles
+      </a>
+
+      <div class="relative lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <!-- TOC sidebar -->
+        <aside class="hidden lg:block">
+          <nav id="toc" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">Contents</h4>
+            <ul class="space-y-2 text-sm border-l border-zinc-200 dark:border-zinc-800">
+              <li><a href="#updates" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="updates">Updates</a></li>
+              <li><a href="#getting-started" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="getting-started">Getting Started</a></li>
+              <li><a href="#prompting" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="prompting">Prompting</a></li>
+              <li><a href="#plan-mode" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="plan-mode">Plan Mode</a></li>
+              <li><a href="#implementing-features" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="implementing-features">Full Features E2E</a></li>
+              <li><a href="#code-review" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="code-review">Code Review</a></li>
+              <li><a href="#git-worktrees" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="git-worktrees">Git Worktrees</a></li>
+              <li><a href="#remote-control" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="remote-control">Remote Control</a></li>
+              <li><a href="#agent-teams" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="agent-teams">Agent Teams</a></li>
+              <li><a href="#extension-system" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="extension-system">Extension System</a></li>
+              <li><a href="#ralph-wiggum" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="ralph-wiggum">Ralph Wiggum</a></li>
+              <li><a href="#unit-testing" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="unit-testing">Unit Testing & TDD</a></li>
+              <li><a href="#safeguards" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="safeguards">Safeguards</a></li>
+              <li><a href="#multi-device" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="multi-device">Multi-Device</a></li>
+              <li><a href="#advanced-patterns" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="advanced-patterns">Advanced Patterns</a></li>
+              <li><a href="#decision-framework" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="decision-framework">Decision Framework</a></li>
+              <li><a href="#keeping-up" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="keeping-up">Keeping Up</a></li>
+            </ul>
+          </nav>
+        </aside>
+        <!-- Article content -->
+        <div class="max-w-3xl">
+        <header class="mb-12">
+          <h1 class="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4">The Claude Code Crash Course: From First Prompt to Autonomous Development Loops</h1>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+            <span>Vlad Blajovan</span>
+            <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+            <span>~20 min read</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+          </div>
+        </header>
+
+        <!-- Article body -->
+        <article class="article-body text-zinc-700 dark:text-zinc-300">
+
+          <p><em>Updated for Claude Code v2.169+ (March 2026) &mdash; covers Opus 4.6, 1M context, Remote Control, built-in worktrees, agent teams, plan mode, and the full extension ecosystem.</em></p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="updates" class="text-zinc-900 dark:text-white">Updates</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">March 7, 2026 &mdash; <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> : Recurring Autonomous Tasks (up to 3 days)</h3>
+
+          <p>Released today. <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> is a powerful new primitive that schedules Claude to perform recurring tasks autonomously for up to 3 days at a time. Unlike Ralph loops (which iterate on a single task until completion), <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> sets up a persistent, time-based agent that monitors, reacts, and executes on a schedule &mdash; essentially giving you a tireless assistant that watches your project while you focus on other work.</p>
+
+          <p>The syntax is natural language describing what to watch for and what to do about it:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/loop babysit all my PRs. Auto-fix build issues and when comments
+come in, use a worktree agent to fix them</code></pre>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/loop every morning use the Slack MCP to give me a summary of top
+posts I was tagged in</code></pre>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/loop every 2 hours run the full test suite on main. If anything
+breaks, create an issue with the failure details and tag me</code></pre>
+
+          <p>This blurs the line between a coding agent and a DevOps automation layer. Where Ralph loops are task-completion engines ("keep going until done"), <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> is a monitoring engine ("keep watching and react when something happens"). Combined with worktree agents, MCP integrations, and Remote Control, it means Claude can babysit your CI pipeline, triage incoming PR feedback, generate daily summaries from Slack or email, and surface problems before you even know they exist &mdash; all running in the background for days at a time.</p>
+
+          <p>Expect this section to grow as the feature matures and patterns emerge.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <p>Claude Code is Anthropic's agentic coding tool. It lives in your terminal, reads your codebase, runs commands, edits files, manages git, and integrates with external services &mdash; all through natural language. But calling it a "coding tool" undersells it. It's a programmable agent framework with filesystem access, bash execution, an ecosystem of plugins, skills, subagents, and hooks, and &mdash; as of February 2026 &mdash; the ability to run across desktop, mobile, and web simultaneously.</p>
+
+          <p>Claude Code has reached a $2.5 billion annualized run rate and accounts for approximately 4% of all public GitHub commits worldwide, with 29 million daily installs in VS Code alone. It's not a curiosity. It's infrastructure. This crash course covers everything a developer needs to use it effectively: prompting for token efficiency, the plan-build-review cycle, parallel development with git worktrees, autonomous Ralph Wiggum loops, testing as verification, safeguards for team practices, and multi-device orchestration with Remote Control.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="getting-started" class="text-zinc-900 dark:text-white">Getting Started: Setup That Pays Dividends</h2>
+
+          <p>Before you write a single prompt, a few minutes of configuration will save hours of friction across every future session.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Installation and Authentication</h3>
+
+          <p>Claude Code installs as a global npm package or native binary. Run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude</code> in your terminal to authenticate with your Anthropic account. You can use it with a Claude Pro ($20/month), Max ($100&ndash;200/month), or direct API access (pay per token). The Max tier unlocks the highest usage allowances and priority access to new features like Remote Control and agent teams. API tokens make sense for CI/CD integration or when you need fine-grained cost control.</p>
+
+          <p>As of March 2026, Claude Code runs on Opus 4.6 by default (the most capable model), with Sonnet 4.6 available for faster, cheaper operations. Both support a 1M token context window &mdash; a massive expansion from earlier limits that fundamentally changes what's possible in a single session.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Four Surfaces, One Tool</h3>
+
+          <p>Claude Code now runs on four surfaces that share the same underlying capabilities:</p>
+
+          <p><strong>Terminal CLI</strong> is the original interface. Full filesystem access, bash execution, MCP integration, and the complete extension system. This is the power user's home base and the only surface from which you can initiate Remote Control sessions.</p>
+
+          <p><strong>Desktop app (Code tab)</strong> provides a graphical interface within the Claude Desktop app. It includes visual diff review, server previews, PR monitoring, and worktree mode with a checkbox toggle. Sessions run locally with full filesystem access.</p>
+
+          <p><strong>IDE extensions</strong> are native integrations for VS Code (plus Cursor and Windsurf) and JetBrains IDEs. The VS Code extension now includes a spark icon in the activity bar listing all sessions, full markdown plan views with comment support, and native MCP server management via <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/mcp</code> in the chat panel.</p>
+
+          <p><strong>Claude Code on the web</strong> runs sessions on Anthropic-managed cloud infrastructure, accessible from any browser or the mobile app. This is a fresh environment without access to your local toolchain &mdash; useful for quick tasks but not a replacement for local sessions when you need your full environment.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The CLAUDE.md File: Your Agent's Constitution</h3>
+
+          <p>Run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/init</code> inside your project directory. Claude scans your codebase &mdash; detecting build systems, test frameworks, linting tools, and code patterns &mdash; and generates a starter <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">CLAUDE.md</code> file. This file loads at the start of every conversation and gives Claude persistent context it can't infer from code alone.</p>
+
+          <p>A good <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">CLAUDE.md</code> includes your project's architecture overview (frameworks, key libraries, folder structure), bash commands for building, testing, linting, and deploying, code style conventions and naming patterns, and workflow rules (branching strategy, commit conventions, PR process). Keep it under 200 lines. Research suggests that LLMs reliably follow roughly 150&ndash;200 instructions before quality degrades, and Claude Code's own system prompt already consumes a portion of that budget. Every irrelevant line dilutes attention to the rules that actually matter.</p>
+
+          <p>If you need more detail, split into sub-files &mdash; <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">frontend/CLAUDE.md</code> for frontend-specific context, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">backend/CLAUDE.md</code> for API conventions &mdash; and reference them from the root. Claude loads CLAUDE.md files hierarchically: enterprise level, user level (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">~/.claude/CLAUDE.md</code>), and project level, with subdirectory files appending context as you navigate into those directories. As of recent versions, project configs and auto-memory are shared across git worktrees of the same repository, so your CLAUDE.md carries over automatically when working in parallel.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Terminal Setup and Permissions</h3>
+
+          <p>Run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/terminal-setup</code> to configure your terminal for Claude Code's keybindings (notably, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Shift+Enter</code> for multi-line input doesn't work by default). Then configure permissions to reduce constant approval prompts. Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/permissions</code> to allowlist safe commands &mdash; <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Bash(npm run *)</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Bash(git *)</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Bash(pytest)</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Edit(/src/**)</code> &mdash; using wildcard syntax. For maximum isolation with minimum friction, use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/sandbox</code> to enable OS-level filesystem and network sandboxing.</p>
+
+          <p>A recent addition: <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">sandbox.enableWeakerNetworkIsolation</code> (macOS only) allows Go-based tools like <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gcloud</code> to work within the sandbox, solving a common friction point where CLI tools that make network calls were blocked by strict sandboxing.</p>
+
+          <p>If you're running contained, low-risk tasks like fixing lint errors or generating boilerplate, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--dangerously-skip-permissions</code> bypasses all checks. Only use this inside a sandboxed Docker environment without internet access.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="prompting" class="text-zinc-900 dark:text-white">Prompting: The Art of Getting More for Less</h2>
+
+          <p>Every prompt costs tokens &mdash; thinking tokens, input tokens, output tokens. Whether you're on a subscription with a usage window or API billing with per-token charges, the goal is communicating maximum intent with minimum ambiguity, so Claude spends its budget on useful work rather than clarification.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Write Prompts Like Specifications, Not Conversations</h3>
+
+          <p>The single biggest efficiency gain is treating prompts as task specifications rather than conversational requests. Compare:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Can you help me add authentication to my app? I was thinking maybe JWT tokens. What do you think would work best?"</p>
+          </blockquote>
+
+          <p>versus:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement JWT authentication in src/auth/. Requirements: access tokens expire in 15 minutes, refresh tokens in 7 days, store refresh tokens in the users table (add a migration), create login and refresh endpoints in src/routes/auth.ts, add middleware validating access tokens on all /api/* routes. Use the existing bcrypt setup. Run tests after implementation."</p>
+          </blockquote>
+
+          <p>The first invites a multi-turn discussion. The second produces working code in a single response. The total session cost &mdash; including all follow-up messages the first approach would require &mdash; is dramatically lower with spec-quality prompts.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The Ultrathink Keyword</h3>
+
+          <p>For complex architectural decisions, algorithm design, or debugging subtle issues, include "ultrathink" in your prompt. This signals Claude to invest significantly more reasoning effort before acting. Ultrathink is back and active in the latest versions &mdash; it triggers high-effort extended thinking mode, which goes deeper than the default thinking behavior. It costs more thinking tokens, but for genuinely complex problems, it's cheaper than iterating through several wrong attempts. The effort level is now displayed alongside the logo and spinner (e.g., "with low effort" or "with high effort"), so you can always see which thinking level is active.</p>
+
+          <p>Note: generic phrases like "think harder" in your prompt don't reliably allocate additional reasoning tokens the way ultrathink does. Use the actual keyword or toggle the effort level in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/config</code>.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Reference and Context Efficiency</h3>
+
+          <p>Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">@./src/auth/middleware.ts</code> to feed a file's contents directly into context &mdash; more token-efficient than asking Claude to find files. Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">@./src/</code> for directory listings. The <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">!</code> prefix runs shell commands directly (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">!git status</code>) without Claude interpreting them as prompts. Press <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Ctrl+U</code> on an empty bash prompt to exit bash mode (a recent addition alongside <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">escape</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">backspace</code>). <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude -p "query"</code> runs in headless mode for scripted queries, now with improved startup performance. Chain with Unix tools: <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">cat data.csv | claude -p "Summarize trends"</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh pr diff 42 | claude -p "Review for bugs"</code>.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Context Management: Your Scarcest Resource</h3>
+
+          <p>With the 1M context window now available on Opus 4.6, you have significantly more room than before. But context rot &mdash; quality degradation as context fills &mdash; is still real. Watch the context indicator and use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/compact</code> proactively after completing sub-tasks, not just when hitting limits. Recent versions include improved cache clearing after compaction, clearing of large tool results, capped file history snapshots, and multiple memory leak fixes.</p>
+
+          <p>Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Esc Esc</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/rewind</code> to undo when Claude goes off-track instead of trying to fix mistakes in the same context. Reverting is almost always cheaper than correcting. Commit often &mdash; at least once per hour &mdash; so you have clean git checkpoints.</p>
+
+          <p>Session management has improved substantially: <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/resume</code> now shows up to 50 sessions (up from 10), sessions display git branch metadata, and forked sessions (created with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/rewind</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--fork-session</code>) are grouped under their root session. Press <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">R</code> in the picker to rename any session. <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/rename</code> now works while Claude is processing, instead of being silently queued. Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude --from-pr 123</code> to resume sessions linked to a specific pull request.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="plan-mode" class="text-zinc-900 dark:text-white">Plan Mode: Think Before You Build</h2>
+
+          <p>Plan mode is one of Claude Code's most important features, and it's where complex work should always start. It separates thinking from doing &mdash; Claude explores your codebase, reasons about the approach, and produces a structured plan before writing any code.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Entering Plan Mode</h3>
+
+          <p>Type <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">shift+tab</code> to toggle plan mode on and off, or start your prompt with "plan:" to enter plan mode for that specific request. In plan mode, Claude can read files, search the codebase, and reason about architecture, but it won't make any edits. It produces a written plan that you review and approve before any implementation begins.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The Plan-Build Cycle</h3>
+
+          <p>The most effective workflow for non-trivial features follows a two-phase pattern:</p>
+
+          <p><strong>Phase 1 &mdash; Plan.</strong> Enter plan mode and describe what you want to build. Claude explores the codebase, identifies relevant files, analyzes dependencies, and proposes an implementation plan. The plan includes which files to create or modify, what the changes will look like, what tests to write, and what potential risks or edge cases exist. Review the plan, push back on anything you disagree with, and iterate until you're satisfied.</p>
+
+          <p><strong>Phase 2 &mdash; Build.</strong> Exit plan mode and tell Claude to execute the plan. Now Claude writes code, creates files, runs tests, and commits. Because the plan was already validated, the implementation phase is faster and more focused.</p>
+
+          <p>In the VS Code extension, plans now render as full markdown documents with support for adding comments &mdash; you can provide inline feedback on specific parts of the plan before implementation begins.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Validating Plans</h3>
+
+          <p>Don't just accept plans uncritically. Treat plan review as a first-class activity:</p>
+
+          <p>Ask Claude to identify risks in its own plan: "What are the three most likely things to go wrong with this approach?" Ask it to consider alternatives: "What's a fundamentally different approach to this problem, and why did you choose this one instead?" Ask it to estimate scope: "How many files will this touch, and which existing tests might break?"</p>
+
+          <p>For complex plans, save them to a file (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">PRD.md</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">IMPLEMENTATION_PLAN.md</code>) so they persist across sessions and can be referenced by Ralph loops or other agents. Plans survive session boundaries when stored as files; they don't survive when they only exist in conversation context.</p>
+
+          <p>Plan mode is preserved across compaction in recent versions (a bug that previously lost plan mode state after <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/compact</code> has been fixed).</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="implementing-features" class="text-zinc-900 dark:text-white">Implementing Full Features End to End</h2>
+
+          <p>With plan mode as your foundation, here's the complete workflow for implementing a substantial feature:</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Step 1: Scope and Plan</h3>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Plan: I need to add a real-time notification system. Users should receive in-app notifications for mentions, task assignments, and deadline reminders. Notifications should be persisted in the database, delivered via WebSocket, and displayed in a notification center UI component. Explore the codebase and propose an implementation plan."</p>
+          </blockquote>
+
+          <p>Review the plan. Iterate. Save it.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Step 2: Implement Incrementally</h3>
+
+          <p>Don't ask Claude to implement the entire feature in one prompt. Break the plan into stages:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement Phase 1 from the plan: create the notification database model, migration, and repository. Write unit tests for the repository. Run tests to verify."</p>
+          </blockquote>
+
+          <p>Wait for completion. Review. Then:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement Phase 2: create the WebSocket notification service. Write integration tests. Run all tests."</p>
+          </blockquote>
+
+          <p>Each stage ends with verification (tests running, linter passing) before the next begins. This prevents context rot &mdash; smaller tasks complete with higher quality and leave more room for the next task.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Step 3: Integration and Polish</h3>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"All phases are implemented. Run the full test suite. Fix any failures. Then review the entire feature for edge cases we may have missed &mdash; empty states, error handling, race conditions, and accessibility."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">Step 4: PR Preparation</h3>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a comprehensive PR for this feature. Write a clear description explaining what changed and why, list the files modified, summarize the test coverage, and note any deployment considerations. Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh pr create</code> to open the PR."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="code-review" class="text-zinc-900 dark:text-white">Code Reviewing Entire Pull Requests</h2>
+
+          <p>Claude Code is remarkably effective at code review &mdash; both for your own PRs and for reviewing others' work.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Reviewing Your Own PR Before Submitting</h3>
+
+          <p>After completing a feature, ask Claude to review its own work:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Review all the changes I've made on this branch compared to main. Look specifically for bugs, security vulnerabilities, performance issues, missing error handling, and deviations from our coding standards in CLAUDE.md. Be concise &mdash; focus on real problems, not style nitpicks."</p>
+          </blockquote>
+
+          <p>This self-review catches a surprising number of issues, especially in multi-file changes where interactions between modified files aren't obvious.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Reviewing Others' PRs</h3>
+
+          <p>Use the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh</code> CLI or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--from-pr</code> flag to pull PR context directly:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>gh pr diff 342 | claude -p "Review this PR for bugs, security issues, and architectural concerns. Focus on problems, not style. Be concise."</code></pre>
+
+          <p>Or interactively:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh pr view 342</code> to get the PR details and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh pr diff 342</code> to get the diff. Review this PR thoroughly. Check for logic errors, missing edge cases, API contract violations, and any changes that could break existing functionality. If the PR includes test changes, verify that the tests actually test what they claim to."</p>
+          </blockquote>
+
+          <p>Claude can also pull PR review comments from GitHub and address them:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Check the comments on PR #342 using <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">gh pr view 342 --comments</code>. Address each review comment &mdash; implement the requested changes where they're valid, and explain your reasoning where you disagree."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">Setting Up Automated PR Review</h3>
+
+          <p>Create a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/review-pr</code> slash command in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/commands/</code>:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>Review PR #$ARGUMENTS using `gh pr diff $ARGUMENTS`.
+
+Focus on:
+1. Bugs and logic errors
+2. Security vulnerabilities
+3. Performance issues
+4. Missing error handling
+5. Test coverage gaps
+
+Skip: style issues, naming preferences, and formatting (our linter handles those).
+Be concise. If the PR looks good, say so in one sentence.</code></pre>
+
+          <p>Integrate into CI using headless mode: <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude -p "/review-pr 342"</code> produces a review summary that can be posted as a PR comment automatically.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="git-worktrees" class="text-zinc-900 dark:text-white">Git Worktrees: Parallel Development Without Collisions</h2>
+
+          <p>Git worktrees are the mechanism that unlocks true parallel Claude Code development. They let you run multiple Claude instances on the same repository simultaneously, each on its own branch with its own files, without any interference.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Built-In Worktree Support</h3>
+
+          <p>As of February 2026, Claude Code has native built-in worktree support via the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--worktree</code> (or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">-w</code>) flag. This was announced by Boris Cherny (Claude Code's creator) and is available across CLI, Desktop app, IDE extensions, web, and mobile.</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code># Start Claude in an isolated worktree named "feature-auth"
+claude --worktree feature-auth
+
+# Start another session in a separate worktree
+claude --worktree bugfix-123
+
+# Let Claude auto-generate the worktree name
+claude --worktree
+
+# Combine with tmux for background sessions
+claude --worktree feature-auth --tmux</code></pre>
+
+          <p>Claude creates the worktree at <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/worktrees/&lt;n&gt;/</code>, checks out a new branch, and starts a session scoped to that directory. Your main working tree is untouched. When you exit, Claude prompts you to keep or remove the worktree.</p>
+
+          <p>Add <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/worktrees/</code> to your <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.gitignore</code> to keep things clean.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Worktree Mode in the Desktop App</h3>
+
+          <p>In the Claude Desktop app's Code tab, check the "worktree mode" checkbox. Every new session automatically gets its own isolated worktree &mdash; no CLI flags needed.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Subagents With Worktree Isolation</h3>
+
+          <p>Subagents can also use worktree isolation for parallel work within a single session. This is powerful for batched changes and code migrations. Ask Claude to "use worktrees for its agents," or configure it in custom agent frontmatter:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>---
+name: migration-worker
+description: Handles file migration tasks
+isolation: worktree
+---</code></pre>
+
+          <h3 class="text-zinc-900 dark:text-white">Worktree Config Sharing</h3>
+
+          <p>Recent versions automatically share project configs and auto-memory across git worktrees of the same repository. Your CLAUDE.md, custom agents, and skills all carry over &mdash; you don't need to duplicate configuration for each worktree. Background tasks in worktrees and custom agents/skills discovery from worktrees have both been fixed in recent releases.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The Parallel Workflow in Practice</h3>
+
+          <p>Open three terminal panes (or use tmux):</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>Terminal 1: claude -w feature-payments    # Building the payment feature
+Terminal 2: claude -w bugfix-auth         # Fixing an auth bug
+Terminal 3: claude                        # Main branch — reviewing, planning</code></pre>
+
+          <p>While Claude works on the payment feature in Terminal 1, you review the auth fix in Terminal 2 and plan the next sprint in Terminal 3. When each task completes, merge the branches:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>git merge feature-payments
+git merge bugfix-auth
+git worktree remove .claude/worktrees/feature-payments
+git worktree remove .claude/worktrees/bugfix-auth</code></pre>
+
+          <p>The key insight: while Claude is working in one worktree, you're reviewing what finished in another. You're not waiting &mdash; you're directing.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Non-Git Version Control</h3>
+
+          <p>For Mercurial, Perforce, or SVN users, configure <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">WorktreeCreate</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">WorktreeRemove</code> hooks to provide custom worktree creation and cleanup logic. These hooks replace the default git behavior when you use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--worktree</code>.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="remote-control" class="text-zinc-900 dark:text-white">Remote Control: Code From Anywhere</h2>
+
+          <p>Launched February 24, 2026, Remote Control decouples Claude Code from your physical workstation. Start a session at your desk, then continue controlling it from your phone, tablet, or any browser. Your code never leaves your machine &mdash; only chat messages and tool results flow through an encrypted bridge.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">How It Works</h3>
+
+          <p>Remote Control is a synchronization layer that connects a local CLI session with claude.ai/code or the Claude mobile app. Your local machine polls the Anthropic API for instructions. When you connect from another device, you're viewing a live window into the session still running locally. Files, MCP servers, environment variables, and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/</code> settings all stay on your machine.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Setting Up Remote Control</h3>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code># Start a new remote-controllable session
+claude remote-control
+
+# Or from within an existing session
+/remote-control
+
+# With a custom name (visible in claude.ai/code)
+claude remote-control --name "Auth Refactor"
+
+# Or use the shorthand
+/rc</code></pre>
+
+          <p>Claude displays a session URL and (on macOS) a QR code. Press spacebar to toggle the QR display. Connect from another device by scanning the QR code with the Claude mobile app, opening the URL in any browser, or finding the session in claude.ai/code (look for the computer icon with a green status dot).</p>
+
+          <p>To enable Remote Control for every session automatically, run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/config</code> and set "Enable Remote Control for all sessions" to true. Need the Claude mobile app? Run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/mobile</code> for an install QR code.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Practical Patterns</h3>
+
+          <p><strong>Start complex work at your desk, monitor from your phone.</strong> Kick off a multi-file feature implementation, then walk to a meeting. From your phone, you can see what Claude is doing in real time, approve or reject file changes, provide additional instructions, and redirect if needed.</p>
+
+          <p><strong>Plan on your phone, build at your desk.</strong> Start a plan mode session via Remote Control from your phone during a commute. Explore the codebase, develop the plan, save it to a file. When you sit down at your desk, the plan is ready to execute.</p>
+
+          <p><strong>Wrap in tmux for resilience.</strong> Remote Control requires the terminal to stay open. Wrap it in tmux so the process survives if your terminal app closes:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>tmux new -s claude-rc
+claude remote-control --name "Feature X"
+# Detach with Ctrl+B, D
+# Reattach later with: tmux attach -t claude-rc</code></pre>
+
+          <h3 class="text-zinc-900 dark:text-white">Limitations</h3>
+
+          <p>Remote Control is in Research Preview. Current constraints: one remote session per machine at a time, the terminal must stay open, and a roughly 10-minute network timeout ends the session if your machine can't reach the network. Permission approval is still required from the remote device &mdash; <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--dangerously-skip-permissions</code> doesn't work with Remote Control yet. Currently available on Max plans, with Pro access rolling out. The session automatically reconnects when your machine comes back online after sleep or network drops.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="agent-teams" class="text-zinc-900 dark:text-white">Agent Teams: Coordinated Multi-Agent Work</h2>
+
+          <p>Claude Code now has experimental built-in support for agent teams &mdash; multiple Claude instances that coordinate through shared task lists and peer-to-peer messaging.</p>
+
+          <p>Agent teams enable automatic teammate spawning, built-in communication via mailboxes, shared task lists with dependency management, and auto-detection of tmux vs iTerm2 for pane management. This moves multi-agent coordination from user-managed scripts to native tooling.</p>
+
+          <p>The combination of agent teams and worktrees is particularly powerful: each agent gets its own isolated worktree while sharing task state through the coordination layer. Ask Claude to "use worktrees for its agents" and the orchestration handles the rest.</p>
+
+          <p>For simpler coordination needs, Anthropic shipped native task management with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">CLAUDE_CODE_TASK_LIST_ID</code>, supporting dependencies, blockers, and multi-session coordination. Many patterns that previously required external tools are now built-in.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="extension-system" class="text-zinc-900 dark:text-white">The Extension System: Skills, Commands, Hooks, Subagents, and Plugins</h2>
+
+          <p>Claude Code has five distinct extension points. Understanding when to use each is the difference between casual use and genuine productivity multiplication.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">CLAUDE.md &mdash; Static Project Knowledge</h3>
+
+          <p>For knowledge that rarely changes: architecture decisions, code style rules, build commands, testing conventions. Claude reads it at session start and uses it as background context.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Slash Commands &mdash; Manual Trigger, Repeatable Prompts</h3>
+
+          <p>Prompt templates stored as markdown in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/commands/</code> (project) or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">~/.claude/commands/</code> (global). Recent versions added bundled commands like <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/simplify</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/batch</code>, and the new <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/claude-api</code> skill for building applications with the Anthropic SDK. Commands support <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">$ARGUMENTS</code> for parameterization and are scoped by directory &mdash; you can have <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/frontend/test</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/backend/test</code>. Numeric keypad now works for selecting options in Claude's interview questions alongside the number row.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Skills &mdash; Auto-Invoked Context Providers</h3>
+
+          <p>Folders with a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">SKILL.md</code> descriptor that activate automatically when their description matches the current task. The description field is critical &mdash; Claude discovers skills by matching your request against descriptions. Include trigger phrases, what the skill does, and when to use it. The <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">allowed-tools</code> field restricts what Claude can do while a skill is active. Skills are loaded only when relevant, avoiding constant context pollution.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Hooks &mdash; Deterministic Automation</h3>
+
+          <p>Shell commands or HTTP endpoints that execute at specific lifecycle events. Unlike CLAUDE.md instructions (advisory), hooks are deterministic &mdash; they run every time with zero exceptions.</p>
+
+          <p>Claude Code now supports hook events across its full lifecycle: <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">UserPromptSubmit</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">PreToolUse</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">PostToolUse</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Stop</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">SubagentStop</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">PreCompact</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">SessionStart</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">SessionEnd</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Notification</code>, and hooks for worktree and subagent lifecycle events. Recent additions include HTTP hooks that POST JSON to a URL and receive JSON back (configure with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">"type": "http"</code>, supports custom headers with env var interpolation via <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">allowedEnvVars</code>), and the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">last_assistant_message</code> field in Stop and SubagentStop hook inputs. Hooks now work on Windows (using Git Bash).</p>
+
+          <p>Use hooks for: formatting after edits, blocking dangerous commands, validating commits, running tests before exit, sending notifications when tasks complete. Configure via <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/hooks</code> interactively or edit <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/settings.json</code> directly.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Subagents &mdash; Isolated Specialists</h3>
+
+          <p>Fresh Claude instances with their own context window, tools, and system prompt. Define them in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.claude/agents/</code>. They support persistent <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">memory</code> directories that build up knowledge over time, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">isolation: worktree</code> for filesystem isolation, model selection (use Sonnet for fast tasks, Opus for complex reasoning), and hook configurations specific to the subagent.</p>
+
+          <p>Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">ctrl+f</code> to kill all background agents (replacing the previous double-ESC shortcut).</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Plugins &mdash; Bundled Extension Packages</h3>
+
+          <p>Plugins package skills, commands, subagents, and hooks into distributable units. The plugin ecosystem has matured with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">enabledPlugins</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">extraKnownMarketplaces</code> configuration. Install community plugins or build your own. Recent fixes ensure plugin installations persist across multiple Claude Code instances.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="ralph-wiggum" class="text-zinc-900 dark:text-white">The Ralph Wiggum Technique: Autonomous Development Loops</h2>
+
+          <p>Ralph Wiggum is an autonomous AI coding loop &mdash; the technique that ships features overnight while you sleep. Named after The Simpsons character (embodying persistent iteration despite setbacks), it keeps Claude working on a task until it verifiably succeeds.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">How Ralph Works</h3>
+
+          <p>The official Anthropic plugin implements Ralph using Claude Code's Stop hook. When the agent tries to exit, the hook intercepts and feeds the same prompt back in. Files from the previous iteration are still there, so each iteration builds on previous work.</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/ralph-loop "Implement the checkout flow. Requirements: [LIST].
+All tests in checkout.test.ts must pass.
+Output &lt;promise&gt;TESTS_PASS&lt;/promise&gt; when done."
+--max-iterations 25
+--completion-promise "TESTS_PASS"</code></pre>
+
+          <p>The loop continues until the completion promise appears or max iterations are reached. Cancel anytime with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/cancel-ralph</code>.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The Two-Phase Pattern</h3>
+
+          <p>Never plan and implement in the same context. Use plan mode to produce a PRD, save it to a file, then start the Ralph loop with a build prompt that references the plan. Each iteration reads the PRD, finds the next unchecked item, implements it, verifies, and updates progress.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Verification Approaches</h3>
+
+          <p><strong>Test-driven:</strong> Write tests first, loop until they pass. The strongest form &mdash; binary success/failure.</p>
+
+          <p><strong>Linter and build:</strong> Prompt instructs Claude to lint and build after each change. Catches syntax errors and type violations.</p>
+
+          <p><strong>Stop hook validation:</strong> The Stop hook runs validation commands before allowing exit. If validation fails, the stop is blocked.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Practical Loop Patterns</h3>
+
+          <p><strong>TDD Loop:</strong></p>
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/ralph-loop "Implement [FEATURE] using TDD. Write failing test, implement, run tests, refactor. Requirements: [LIST]. Output &lt;promise&gt;DONE&lt;/promise&gt; when all tests green." --max-iterations 50</code></pre>
+
+          <p><strong>Coverage Loop:</strong></p>
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/ralph-loop "Find uncovered lines in coverage report. Write tests for critical paths. Target: 80% minimum. Output &lt;promise&gt;COVERAGE_MET&lt;/promise&gt; when target reached." --max-iterations 30</code></pre>
+
+          <p><strong>Entropy Loop:</strong></p>
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>/ralph-loop "Scan for code smells: unused exports, dead code, inconsistent patterns. Clean one per iteration. Run linter to verify. Output &lt;promise&gt;CLEAN&lt;/promise&gt; when no smells remain." --max-iterations 20</code></pre>
+
+          <h3 class="text-zinc-900 dark:text-white">Safety and Native Alternatives</h3>
+
+          <p>Always use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">--max-iterations</code>. A 50-iteration loop can cost $50&ndash;100+ in API tokens. Run in Docker for isolation. Always run in a git-tracked directory.</p>
+
+          <p>Many Ralph patterns now have native equivalents &mdash; Anthropic shipped built-in task management with dependencies, blockers, and multi-session coordination. For simpler iterative workflows, the native task system may be sufficient. Ralph remains the right tool for fully autonomous overnight work with custom verification gates.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Ralph vs /loop: Different Tools for Different Jobs</h3>
+
+          <p>Ralph and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> (see Updates section) serve fundamentally different purposes. Ralph is a task-completion engine &mdash; it iterates on a single goal until success criteria are met, then stops. <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> is a monitoring engine &mdash; it runs on a schedule for up to 3 days, watching for events and reacting when they occur. Use Ralph when you have a defined deliverable ("implement this feature, make all tests pass"). Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> when you have an ongoing responsibility ("babysit my PRs, fix build issues as they arise, summarize Slack mentions every morning"). They compose well together: a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/loop</code> that monitors your CI pipeline could spawn Ralph loops to fix individual failures it detects.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="unit-testing" class="text-zinc-900 dark:text-white">Integrating Unit Testing and TDD</h2>
+
+          <p>Testing is the verification mechanism that makes everything else reliable. Without tests, you have no way to know if Claude's changes actually work. With tests, every edit is immediately validated.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Test-First Prompting</h3>
+
+          <p>Describe behavior and ask Claude to write the test first:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Write a test that verifies: when a user submits a payment with an expired card, the system returns a CardExpired error, does not charge the card, and logs the attempt. Then implement the code that makes the test pass."</p>
+          </blockquote>
+
+          <p>The test becomes the specification. You review both &mdash; the test tells you what Claude understood, the implementation tells you how it satisfies those requirements.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Continuous Verification in CLAUDE.md</h3>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>## Testing
+- Run `npm test` after any implementation change
+- All tests must pass before committing
+- Never skip or disable existing tests to make new code pass
+- Write tests for edge cases: empty inputs, nulls, concurrency, error paths</code></pre>
+
+          <p>The last rule is critical. Without it, Claude will occasionally "fix" failing tests by disabling them.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Tests as Ralph Loop Exit Conditions</h3>
+
+          <p>Write tests before starting the loop. Give Claude the failing tests and a prompt: "make all tests pass without modifying the test file." The green test suite is the exit condition &mdash; objective, not subjective.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Integration Testing in CI</h3>
+
+          <p><code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude -p</code> enables CI integration. A pre-merge check that reviews test coverage, validates the diff, or runs automated code review is straightforward:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>gh pr diff $PR_NUMBER | claude -p "Review this diff. Verify test coverage for all new code paths. Report any untested branches."</code></pre>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="safeguards" class="text-zinc-900 dark:text-white">Safeguards: Enforcing Internal Practices</h2>
+
+          <p>CLAUDE.md instructions are advisory. For rules that must be enforced without exception, use hooks.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Code Style Enforcement (PostToolUse)</h3>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{
+        "type": "command",
+        "command": "npx prettier --write $CLAUDE_FILE_PATH &amp;&amp; npx eslint --fix $CLAUDE_FILE_PATH"
+      }]
+    }]
+  }
+}</code></pre>
+
+          <p>Runs after every edit, every time. Your code style is guaranteed.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Architectural Boundary Enforcement (PreToolUse)</h3>
+
+          <p>Block violations of layer dependencies:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>#!/bin/bash
+FILE="$CLAUDE_FILE_PATH"
+if [[ "$FILE" == */domain/* ]]; then
+  if grep -qE "import.*from ['\"](react|@angular|flutter)" "$FILE"; then
+    echo "ERROR: Domain layer cannot import UI frameworks" &gt;&amp;2
+    exit 2
+  fi
+fi</code></pre>
+
+          <h3 class="text-zinc-900 dark:text-white">Test Requirement Before Exit (Stop Hook)</h3>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>#!/bin/bash
+npm test --silent 2&gt;/dev/null
+if [ $? -ne 0 ]; then
+  echo "Tests are failing. Fix them before stopping." &gt;&amp;2
+  exit 2
+fi</code></pre>
+
+          <h3 class="text-zinc-900 dark:text-white">HTTP Hooks for Team Integration</h3>
+
+          <p>HTTP hooks POST JSON to a URL and receive JSON back &mdash; use them for Slack notifications, team dashboards, or centralized validation:</p>
+
+          <pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "http",
+        "url": "https://internal.company.com/claude-webhook",
+        "headers": {
+          "Authorization": "Bearer ${WEBHOOK_TOKEN}"
+        }
+      }]
+    }]
+  }
+}</code></pre>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="multi-device" class="text-zinc-900 dark:text-white">Working Across Devices: The Multi-Surface Workflow</h2>
+
+          <p>The most powerful Claude Code workflow in 2026 uses multiple surfaces in combination:</p>
+
+          <p><strong>Desktop terminal</strong> for power sessions &mdash; plan mode, implementation, Ralph loops, parallel worktrees with tmux.</p>
+
+          <p><strong>Desktop app</strong> for visual review &mdash; diff review, PR monitoring, plan commenting, worktree mode checkbox.</p>
+
+          <p><strong>VS Code extension</strong> for IDE integration &mdash; sessions as full editors, plans as commentable markdown, native MCP management, multiple Claude panes.</p>
+
+          <p><strong>Remote Control from phone/tablet</strong> for mobile orchestration &mdash; monitor long-running tasks, approve permissions, redirect work, review plans during commute. Conversations sync across all connected devices.</p>
+
+          <p><strong>Claude Code on the web</strong> for quick tasks &mdash; cloud-hosted sessions for one-off questions or working from a machine without Claude Code installed.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Coordinating Multiple Instances</h3>
+
+          <p>When running parallel sessions across worktrees, terminals, or devices, coordination happens through three mechanisms:</p>
+
+          <p><strong>Git itself.</strong> Each worktree is on its own branch. Merge when complete. Git prevents checking out the same branch in two worktrees.</p>
+
+          <p><strong>Shared task files.</strong> A <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">TASKS.md</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">IMPLEMENTATION_PLAN.md</code> in the repo serves as a shared coordination point. Multiple agents read and update it.</p>
+
+          <p><strong>Agent teams (experimental).</strong> Native coordination with shared task lists, dependency management, and peer-to-peer messaging.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="advanced-patterns" class="text-zinc-900 dark:text-white">Advanced Patterns</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">Model Switching for Cost Optimization</h3>
+
+          <p>Use Sonnet 4.6 for fast, cheap operations and Opus 4.6 for complex reasoning. Switch with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/model</code> &mdash; the picker now shows human-readable labels. Opus 4.6 fast mode includes the full 1M context window.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Voice Input</h3>
+
+          <p>Claude Code supports voice STT in 20 languages (10 new as of recent versions: Russian, Polish, Turkish, Dutch, Ukrainian, Greek, Czech, Danish, Swedish, Norwegian). Voice is particularly powerful for describing complex requirements &mdash; faster and more natural than typing detailed specifications.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Session Archaeology</h3>
+
+          <p>Claude stores all session history in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">~/.claude/projects/</code>. Search historical sessions, recover effective prompts, find debugging steps, and run meta-analysis on logs. Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude --resume</code> to pick up old sessions and ask the agent to summarize how it overcame specific errors &mdash; then improve your CLAUDE.md with those insights.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The Revert Reflex</h3>
+
+          <p>Don't be afraid to <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">git revert</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">git reset</code>. If something looks wrong after a few exchanges, revert and rephrase rather than escalate.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="decision-framework" class="text-zinc-900 dark:text-white">Decision Framework: Where Does Each Rule Belong?</h2>
+
+          <p><strong>CLAUDE.md</strong> &rarr; Context that informs decisions. "What should Claude know?"</p>
+
+          <p><strong>Hooks</strong> &rarr; Rules that must execute deterministically. "What must happen every time?"</p>
+
+          <p><strong>Skills</strong> &rarr; Specialized behaviors activated contextually. "What expertise should Claude gain based on the task?"</p>
+
+          <p><strong>Slash Commands</strong> &rarr; Workflows you trigger explicitly. "What multi-step processes do I repeat?"</p>
+
+          <p><strong>Subagents</strong> &rarr; Heavy work in isolated context. "What should run in a separate context window?"</p>
+
+          <p><strong>Plugins</strong> &rarr; Bundled packages from the community. "What ready-made workflows can I install?"</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="keeping-up" class="text-zinc-900 dark:text-white">Keeping Up</h2>
+
+          <p>Claude Code ships updates multiple times per week. Native task management, agent teams, Remote Control, worktree support, HTTP hooks, voice STT &mdash; all shipped in the span of weeks. The feature set today is substantially larger than even a month ago.</p>
+
+          <p>Stay current: check <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">code.claude.com/docs</code>, run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">claude --version</code>, and periodically re-run <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">/init</code>. The <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">awesome-claude-code</code> repository on GitHub maintains a curated list of community plugins, skills, hooks, and workflows.</p>
+
+          <p>The biggest mindset shift is treating Claude Code not as a chat interface but as a development environment that rewards thoughtful setup. The developers who invest an afternoon configuring their CLAUDE.md, permissions, hooks, skills, and worktree workflow operate at a fundamentally different speed than those who start from scratch every session.</p>
+
+          <p>Set it up once. Use it everywhere &mdash; desktop, phone, web. Let the agent handle the ceremony. You handle the judgment.</p>
+
+        </article>
+
+        <!-- Follow section -->
+        <div class="mt-16 rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Enjoyed this article?</h3>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Follow me for more on mobile development, accessibility, and AI-assisted workflows.</p>
+          <div class="flex justify-center gap-4">
+            <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-200 px-6 py-12 dark:border-zinc-800">
+    <div class="mx-auto max-w-5xl">
+      <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-6">
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+          <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+          <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+          <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+        </a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const iconMenu = document.getElementById('icon-menu');
+      const iconClose = document.getElementById('icon-close');
+      menu.classList.toggle('hidden');
+      iconMenu.classList.toggle('hidden');
+      iconClose.classList.toggle('hidden');
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // TOC scroll highlighting
+    (function() {
+      var headings = document.querySelectorAll('.article-body h2[id]');
+      var tocLinks = document.querySelectorAll('.toc-link');
+      if (!headings.length || !tocLinks.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(link) { link.classList.remove('active'); });
+            var active = document.querySelector('.toc-link[data-target="' + entry.target.id + '"]');
+            if (active) active.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -75% 0px', threshold: 0 });
+      headings.forEach(function(h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

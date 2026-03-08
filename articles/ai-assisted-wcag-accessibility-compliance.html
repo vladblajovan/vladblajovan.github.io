@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="alternate icon" href="/favicon.jpeg" type="image/jpeg"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
+  <title>Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought - Vlad Blajovan</title>
+  <meta name="description" content="A deep dive into WCAG 2.2 principle by principle, mapping each to Apple and Google accessibility guidance, and showing how AI assistants help you build compliance from the ground up." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fade-in 0.6s ease both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { animation: none; opacity: 1; }
+    }
+
+    .article-body h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.3;
+      scroll-margin-top: 7rem;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .article-body h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .article-body p {
+      margin-bottom: 1.25rem;
+      line-height: 1.8;
+    }
+
+    .article-body ul, .article-body ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+
+    .article-body li {
+      margin-bottom: 0.5rem;
+      line-height: 1.7;
+    }
+
+    .article-body blockquote {
+      border-left: 3px solid;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .article-body code {
+      font-size: 0.875em;
+      padding: 0.15em 0.4em;
+      border-radius: 0.25rem;
+    }
+
+    .article-body hr {
+      margin: 2.5rem 0;
+      border: none;
+      border-top: 1px solid;
+    }
+
+    .article-body strong {
+      font-weight: 600;
+    }
+
+    .toc-link.active {
+      color: #18181b;
+      border-left-color: #18181b;
+      font-weight: 500;
+    }
+    .dark .toc-link.active {
+      color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    #toc::-webkit-scrollbar { width: 3px; }
+    #toc::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    .dark #toc::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-white text-zinc-900 antialiased dark:bg-black dark:text-white">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
+      <!-- Desktop nav -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <button onclick="toggleTheme()" aria-label="Toggle theme"
+          class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
+          <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <svg class="h-4 w-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Mobile: hamburger -->
+      <div class="flex md:hidden items-center gap-2">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+          <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+          </svg>
+          <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
+      <div class="flex flex-col px-6 py-4 space-y-4">
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-6 pt-32 pb-24">
+    <div class="fade-in">
+      <!-- Back link -->
+      <a href="/articles.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-8">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+        </svg>
+        Back to Articles
+      </a>
+
+      <!-- Article content with TOC sidebar -->
+      <div class="relative lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <!-- TOC sidebar -->
+        <aside class="hidden lg:block">
+          <nav id="toc" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">Contents</h4>
+            <ul class="space-y-2 text-sm border-l border-zinc-200 dark:border-zinc-800">
+              <li><a href="#pour-framework" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="pour-framework">POUR Framework</a></li>
+              <li><a href="#perceivable" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="perceivable">Perceivable</a></li>
+              <li><a href="#operable" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="operable">Operable</a></li>
+              <li><a href="#understandable" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="understandable">Understandable</a></li>
+              <li><a href="#robust" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="robust">Robust</a></li>
+              <li><a href="#platform-specific" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="platform-specific">Platform-Specific</a></li>
+              <li><a href="#other-resources" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="other-resources">Other Resources</a></li>
+              <li><a href="#building-from-ground-up" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="building-from-ground-up">Building From Ground Up</a></li>
+              <li><a href="#migrating" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="migrating">Migrating Existing App</a></li>
+              <li><a href="#ai-automation" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="ai-automation">AI Automation</a></li>
+              <li><a href="#advanced-considerations" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="advanced-considerations">Advanced Considerations</a></li>
+              <li><a href="#prompt-library" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="prompt-library">Prompt Library</a></li>
+              <li><a href="#conclusion" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="conclusion">Conclusion</a></li>
+            </ul>
+          </nav>
+        </aside>
+        <!-- Article content -->
+        <div class="max-w-3xl">
+        <header class="mb-12">
+          <h1 class="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4">Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought</h1>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+            <span>Vlad Blajovan</span>
+            <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+            <span>~25 min read</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Accessibility</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+        </header>
+
+        <!-- Article body -->
+        <article class="article-body text-zinc-700 dark:text-zinc-300">
+
+          <p>Accessibility is the largest unfunded mandate in software development. Everyone agrees it matters. Almost no one budgets enough time for it. The result is a familiar pattern: an app ships, someone runs an audit, a dispiriting list of WCAG violations lands on the backlog, and the team spends weeks retrofitting fixes into code that was never designed to accommodate them.</p>
+
+          <p>AI coding assistants change the economics of this equation in the same way they've changed the economics of testing and architecture — by making the right way fast enough that there's no reason to skip it. Every accessibility label, every contrast check, every semantic role annotation, every keyboard navigation handler is exactly the kind of structured, pattern-following, specification-driven code that AI generates fluently. The human judgment — deciding what the experience should feel like for a VoiceOver user navigating your checkout flow, or whether your color system works for someone with deuteranopia — still belongs to you. But the implementation, the boilerplate, the platform-specific API dance? That's where the AI earns its keep.</p>
+
+          <p>This article dissects WCAG 2.2 principle by principle, maps each to Apple's Human Interface Guidelines and Google's Material Design accessibility guidance, and shows how AI assistants can help you build compliance into your app from the ground up — or migrate an existing codebase toward it systematically.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="pour-framework" class="text-zinc-900 dark:text-white">The Four Pillars: WCAG's POUR Framework</h2>
+
+          <p>WCAG 2.2 organizes its guidance around four principles, commonly abbreviated as POUR: Perceivable, Operable, Understandable, and Robust. Every success criterion in the specification falls under one of these. Understanding them as architectural concerns — not just checklist items — is the key to building accessibility that doesn't feel bolted on.</p>
+
+          <p>Apple's Human Interface Guidelines and Google's Material Design guidelines both align with POUR, though neither explicitly uses the acronym. Apple frames accessibility as a foundational design concern alongside color, typography, and layout. Google integrates accessibility into Material Design as a cross-cutting requirement that touches every component. Both ecosystems provide platform-specific APIs that map directly to WCAG success criteria.</p>
+
+          <p>What follows is a deep walk through each principle, its constituent guidelines, what Apple and Google say about them, and precisely how AI coding assistants help you satisfy each one.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="perceivable" class="text-zinc-900 dark:text-white">Principle 1: Perceivable</h2>
+
+          <p>Information and user interface components must be presentable to users in ways they can perceive. If a user can't see, hear, or otherwise detect your content, it doesn't exist for them.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">1.1 Text Alternatives</h3>
+
+          <p>WCAG requires that all non-text content — images, icons, charts, decorative graphics — has a text alternative that serves an equivalent purpose. This is the single most common accessibility failure in mobile apps, and one of the easiest for AI to address systematically.</p>
+
+          <p>Apple's HIG mandates that every meaningful image and icon includes an <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">accessibilityLabel</code>. SwiftUI makes this straightforward with the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityLabel()</code> modifier, but the challenge is coverage: in a large app, it's easy to forget one image, one custom icon, one decorative graphic that should be marked as such. Google's guidance is equivalent — every <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">ImageView</code> needs a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">contentDescription</code>, every Compose <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Image</code> needs a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">contentDescription</code> parameter or an explicit <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">semantics { }</code> block.</p>
+
+          <p>This is where AI-assisted development shines brightest. Ask your AI assistant to audit a screen's code for missing accessibility labels, and it will scan every image, icon, and custom view, flagging each one that lacks a text alternative. Better yet, adopt the practice of generating screens with labels included from the start. When you prompt the AI with "create a product card component showing a product image, name, price, and add-to-cart button," specify that all elements must include accessibility labels. The AI will generate <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">accessibilityLabel("Product image: \(product.name)")</code> on the image, mark decorative separators as <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityHidden(true)</code>, and annotate the button with an action-oriented label like "Add \(product.name) to cart" rather than a generic "Add."</p>
+
+          <p>For charts, graphs, and data visualizations — where text alternatives require summarizing visual information — the AI can generate descriptive summaries. Provide the underlying data and ask: "Write an accessibility description for a bar chart showing monthly revenue from January through June, with a notable spike in March." The AI produces a concise, informative description that a screen reader user can understand without seeing the visual.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">1.2 Time-Based Media</h3>
+
+          <p>Audio and video content requires captions, transcripts, and audio descriptions. While generating accurate captions for arbitrary media is outside the scope of a coding assistant, the AI helps enormously with the infrastructure: building a captioning overlay system, integrating with caption file formats (WebVTT, SRT), creating a media player component that surfaces caption controls prominently, and ensuring that auto-play is disabled by default (a requirement under both WCAG and Apple's HIG).</p>
+
+          <p>Ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a video player component that loads WebVTT captions, shows a visible caption toggle, respects the system's caption styling preferences, and pauses on load until the user explicitly plays."</p>
+          </blockquote>
+
+          <p>The platform-specific caption preference APIs (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">AVPlayer</code>'s <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">appliesMediaSelectionCriteriaAutomatically</code> on Apple, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">CaptioningManager</code> on Android) are exactly the kind of obscure-but-critical integration the AI handles well.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">1.3 Adaptable Content</h3>
+
+          <p>Content must be presentable in different ways — assistive technologies must be able to parse your UI's structure and meaning without losing information. This means using semantic markup: headings should be headings, lists should be lists, form fields should have associated labels, and the reading order should match the visual order.</p>
+
+          <p>Apple implements this through the accessibility hierarchy — the tree of elements that VoiceOver traverses. SwiftUI views automatically participate, but custom views need explicit annotation with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityElement()</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityAddTraits()</code>, and grouping with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityElement(children: .combine)</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityElement(children: .contain)</code>. Google's equivalent is the AccessibilityNodeInfo tree that TalkBack reads, with Compose providing <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">semantics { }</code> blocks and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Modifier.semantics { heading() }</code> for structural annotation.</p>
+
+          <p>AI assistants excel at generating semantically rich UI code because the patterns are well-defined. When you describe a screen, the AI can produce not just the visual layout but the semantic structure: headers annotated with heading traits, grouped form fields with their labels associated programmatically, list items with their position announced ("Item 3 of 12"), and custom controls with appropriate roles. The key prompt pattern is:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Generate this screen with full VoiceOver/TalkBack semantic structure, including headings, groupings, and reading order annotations."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">1.4 Distinguishable</h3>
+
+          <p>Users must be able to see and hear content, including separating foreground from background. This guideline encompasses color contrast, text resizing, text spacing, and the requirement that color alone is never the only means of conveying information.</p>
+
+          <p><strong>Color contrast</strong> is the most precisely measurable accessibility criterion. WCAG 2.2 requires a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text (Level AA). Apple's HIG specifies the same 4.5:1 ratio and encourages the use of semantic system colors that automatically adapt to light and dark modes. Google's Material Design 3 builds contrast compliance into its dynamic color system, where algorithmically generated palettes are designed to maintain sufficient contrast across tonal variations.</p>
+
+          <p>AI assistants can validate contrast ratios at code-generation time. When you define a color palette, ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Verify that every foreground/background combination in this theme meets WCAG AA contrast ratios and flag any that fall below 4.5:1 for text or 3:1 for non-text elements."</p>
+          </blockquote>
+
+          <p>The AI computes the ratios and identifies violations before a single pixel renders on screen.</p>
+
+          <p><strong>Dynamic Type and text scaling</strong> is where Apple's ecosystem excels. The HIG strongly recommends supporting Dynamic Type across all text styles, allowing users to scale text from extra small to the accessibility sizes that can reach 300% of the default. Google's equivalent is the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">sp</code> (scale-independent pixel) unit and the font scale setting in Android's accessibility options. WCAG 2.2 requires that text can be resized up to 200% without loss of content or functionality (Success Criterion 1.4.4).</p>
+
+          <p>When generating UI code, always instruct the AI to use scalable text units. For SwiftUI: "Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.font(.body)</code> and Dynamic Type-compatible text styles, never fixed point sizes." For Compose: "Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">MaterialTheme.typography</code> text styles with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">sp</code> units, never fixed <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">dp</code> for text." For Flutter: "Use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Theme.of(context).textTheme</code> and respect <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">MediaQuery.textScaleFactorOf(context)</code>." The AI applies these conventions consistently, and a follow-up prompt can verify:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Audit this file for any hardcoded text sizes that don't respect the system's text scaling preference."</p>
+          </blockquote>
+
+          <p><strong>Color as sole indicator</strong> is a subtler requirement. Red for errors, green for success — these work for most users but fail for the 8% of men and 0.5% of women with color vision deficiency. WCAG requires a secondary indicator (an icon, a text label, a pattern) alongside color. Apple's HIG explicitly recommends using symbols and labels alongside color cues. Material Design similarly advises pairing color with icons or text.</p>
+
+          <p>Ask the AI to review your error states, success confirmations, and status indicators:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Does this UI rely on color alone to convey any state? If so, add a secondary indicator — an icon, a text label, or a shape change — for each one."</p>
+          </blockquote>
+
+          <p>The AI identifies every instance where color is the only differentiator and generates the supplementary indicator.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="operable" class="text-zinc-900 dark:text-white">Principle 2: Operable</h2>
+
+          <p>All users must be able to operate the interface. This means keyboard accessibility, sufficient time to complete tasks, no seizure-inducing content, clear navigation, and — new in WCAG 2.2 — reduced reliance on complex gestures.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">2.1 Keyboard Accessible</h3>
+
+          <p>Every function available through a touchscreen must also be available through alternative input methods: keyboard, switch control, voice control, or other assistive devices. On iOS, this means supporting Full Keyboard Access and Switch Control. On Android, it means supporting external keyboards and Switch Access.</p>
+
+          <p>Apple's HIG emphasizes that all interactive elements should be reachable through VoiceOver's swipe navigation and Full Keyboard Access's tab navigation. Google's guidelines require that every user flow is completable through TalkBack navigation and that custom views properly report their accessibility actions.</p>
+
+          <p>AI assistants generate keyboard-accessible code by default when prompted correctly. The key is to use native components wherever possible — native buttons, text fields, toggles, and sliders already have keyboard and assistive technology support built in. When custom components are necessary, tell the AI:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create this custom slider control with full VoiceOver/TalkBack support, including adjustable value announcements, increment/decrement actions, and keyboard arrow key handling."</p>
+          </blockquote>
+
+          <p>The AI generates the platform-specific accessibility action implementations that make custom controls behave like native ones to assistive technology.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">2.2 Enough Time</h3>
+
+          <p>If your app includes timeouts — session expiration, timed forms, auto-advancing carousels — users must be able to extend or disable the timeout. This is critical for users with motor or cognitive disabilities who need more time to complete tasks.</p>
+
+          <p>WCAG requires that time limits can be turned off, adjusted, or extended, with at least 20 seconds to request an extension. When building any timed feature, ask the AI to include the accessibility safeguards:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Add a timeout warning dialog that appears 30 seconds before session expiration, with a button to extend the session, and respect the system's accessibility preference to disable auto-timeout where available."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">2.3 Seizures and Physical Reactions</h3>
+
+          <p>Content must not flash more than three times per second. This is both a WCAG requirement and an Apple App Store guideline. WCAG 2.2 extends this to physical reactions — vestibular motion sensitivity triggered by parallax scrolling, zooming animations, or moving backgrounds.</p>
+
+          <p>Apple's HIG explicitly respects the "Reduce Motion" accessibility setting (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">UIAccessibility.isReduceMotionEnabled</code> in UIKit, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">accessibilityReduceMotion</code> in SwiftUI's <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">@Environment</code>). Google provides <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Settings.Global.ANIMATOR_DURATION_SCALE</code>, which users can set to zero to disable animations.</p>
+
+          <p>When generating any animation, prompt the AI:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement this transition with a reduced-motion alternative. When the user has Reduce Motion enabled, replace the animation with a simple crossfade or instant transition."</p>
+          </blockquote>
+
+          <p>The AI generates the conditional logic that checks the system preference and provides the alternative, a pattern that should be applied to every animated transition in your app.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">2.4 Navigable</h3>
+
+          <p>Users must be able to find content and know where they are. This encompasses page titles, focus order, link purpose, multiple ways to find content, headings, and visible focus indicators.</p>
+
+          <p><strong>Focus management</strong> is one of the most commonly neglected accessibility concerns in mobile apps. When a modal appears, focus should move to it. When it dismisses, focus should return to the trigger. When a screen loads, focus should land on a logical starting point. Both Apple and Google provide APIs for programmatic focus control, but they're rarely used correctly.</p>
+
+          <p>Ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement focus management for this modal dialog: move VoiceOver/TalkBack focus to the dialog title on presentation, trap focus within the dialog while it's visible, and return focus to the triggering button on dismissal."</p>
+          </blockquote>
+
+          <p>The AI generates the platform-specific implementation — <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">UIAccessibility.post(notification: .screenChanged, argument: dialogTitle)</code> on iOS, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED</code> on Android — that makes the experience coherent for assistive technology users.</p>
+
+          <p><strong>Focus indicators</strong> received significant attention in WCAG 2.2 with two new success criteria: Focus Not Obscured (2.4.11, AA) requires that the focused element isn't fully hidden by other content, and Focus Appearance (2.4.13, AAA) specifies a minimum visible focus indicator. When building custom components, tell the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Ensure all interactive elements show a clearly visible focus ring when focused via keyboard or switch control, with a minimum 2px outline that contrasts at 3:1 against both the component and the background."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">2.5 Input Modalities</h3>
+
+          <p>Users interact through various input methods beyond traditional touch: voice, switch, stylus, head tracking. WCAG 2.5 covers pointer gestures, pointer cancellation, label in name, motion actuation, and — new in 2.2 — target size and dragging movements.</p>
+
+          <p><strong>Target size</strong> (2.5.8, AA in WCAG 2.2) requires that interactive targets are at least 24&times;24 CSS pixels, with Apple's HIG recommending 44&times;44 points and Google specifying 48&times;48 dp as the minimum touch target. This is a measurable, enforceable standard that AI can validate automatically.</p>
+
+          <p>Ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Audit all interactive elements in this screen for minimum touch target size. Flag any button, link, toggle, or interactive area smaller than 44&times;44pt (iOS) or 48&times;48dp (Android). For undersized elements, suggest a hit area expansion using <code>.frame(minWidth: 44, minHeight: 44)</code> or <code>Modifier.sizeIn(min = 48.dp)</code>."</p>
+          </blockquote>
+
+          <p>The AI scans the layout and identifies every violation, generating the fix inline.</p>
+
+          <p><strong>Dragging alternatives</strong> (2.5.7, AA in WCAG 2.2) requires that any action achievable through dragging can also be achieved through a single pointer action. If your app has drag-to-reorder lists, drag-and-drop interfaces, or slider-based inputs, each needs an alternative. Ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Add a non-dragging alternative for this reorder list — a context menu with 'Move Up' and 'Move Down' options on each item, accessible via long press and through VoiceOver's custom actions."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="understandable" class="text-zinc-900 dark:text-white">Principle 3: Understandable</h2>
+
+          <p>Information and UI operation must be understandable. This covers readable text, predictable behavior, and input assistance.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">3.1 Readable</h3>
+
+          <p>The language of the page and any changes in language must be programmatically determinable. This allows screen readers to switch pronunciation rules automatically. On iOS, set <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">accessibilityLanguage</code> on elements with foreign-language text. On Android, use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">LocaleSpan</code> in text or set the locale on accessibility nodes.</p>
+
+          <p>AI assistants handle this well because it's a mechanical annotation task. When your app contains mixed-language content — a recipe app with French dish names, a travel app with local place names — ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Annotate all foreign-language text elements with their correct language code for screen reader pronunciation."</p>
+          </blockquote>
+
+          <p>The AI generates the appropriate <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">accessibilityLanguage</code> or <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">LocaleSpan</code> for each element.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">3.2 Predictable</h3>
+
+          <p>Interfaces should behave consistently. Navigation should be consistent across screens. Focus changes should not trigger unexpected context changes. Form inputs should not submit or navigate automatically when a selection is made.</p>
+
+          <p>Both Apple and Google enforce this through their design guidelines. Apple's HIG recommends consistent placement of navigation elements and predictable responses to gestures. Material Design's principles emphasize that actions should have clear, expected outcomes.</p>
+
+          <p>When generating navigation and form code, instruct the AI:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Never auto-submit on selection. Never navigate on focus change. Always require an explicit user action (tap, press, submit) to trigger state changes or navigation."</p>
+          </blockquote>
+
+          <p>The AI builds these safeguards into the interaction logic, preventing the kind of surprise context changes that disorient all users and devastate assistive technology users.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">3.3 Input Assistance</h3>
+
+          <p>When users make errors, the error must be identified and described in text. Where possible, the app should suggest corrections. Where input has legal or financial consequences, submissions should be reversible, verifiable, or confirmable.</p>
+
+          <p>WCAG 2.2 adds two important criteria here. Redundant Entry (3.3.7, A) requires that information the user has already provided is either auto-populated or available for selection, reducing repetitive data entry. Accessible Authentication (3.3.8, AA) requires that authentication doesn't depend on cognitive function tests — no CAPTCHA puzzles, no memory-dependent password requirements — with alternatives like biometric login, passkeys, or email-based verification.</p>
+
+          <p>Apple's ecosystem strongly supports accessible authentication through Face ID, Touch ID, and passkeys. Google provides Credential Manager and biometric authentication APIs. When building login flows, ask the AI to:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Implement authentication with biometric primary, passkey fallback, and email magic link as the final alternative — no CAPTCHA, no cognitive tests, with clear error messages that describe what went wrong and how to fix it."</p>
+          </blockquote>
+
+          <p>For form validation broadly, the AI generates accessible error handling fluently. Prompt:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Add inline validation to this form. When a field fails validation, display the error message directly below the field, associate it programmatically with the field using <code>accessibilityValue</code> or <code>Modifier.semantics { error() }</code>, and move VoiceOver/TalkBack focus to the first error when the user attempts to submit."</p>
+          </blockquote>
+
+          <p>The result is an error experience that works equally well for sighted and non-sighted users.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="robust" class="text-zinc-900 dark:text-white">Principle 4: Robust</h2>
+
+          <p>Content must be robust enough to be interpreted reliably by a wide variety of user agents, including assistive technologies. In practice, this means your UI components must correctly expose their roles, names, values, and states to the platform's accessibility API.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">4.1 Compatible</h3>
+
+          <p>Every custom component must have a correct accessibility role, a meaningful name, and dynamically updated state information. A custom toggle must announce itself as a toggle, report whether it's on or off, and announce its state change when activated. A custom dropdown must announce itself as a popup, report the currently selected value, and describe how to interact with it.</p>
+
+          <p>Apple provides the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">UIAccessibilityTraits</code> system (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.button</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.header</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.adjustable</code>, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.selected</code>, etc.) and SwiftUI's <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityAddTraits()</code> modifier. Google provides <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">AccessibilityNodeInfo.setClassName()</code> and Compose's <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">semantics { role = Role.Switch }</code> for role mapping, with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">stateDescription</code> for custom state announcements.</p>
+
+          <p>This is perhaps the accessibility area where AI assistance has the highest leverage. Every custom component needs a handful of accessibility annotations, and getting them wrong means the component is invisible or confusing to assistive technology users. When building custom components, make the prompt explicit:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create this custom star-rating control. It must announce as 'Rating: 3 out of 5 stars' to VoiceOver, support increment/decrement with swipe gestures, update its announcement dynamically when the value changes, and include a hint explaining how to adjust the rating."</p>
+          </blockquote>
+
+          <p>The AI generates the full accessibility implementation alongside the visual implementation, treating them as inseparable. This is the mindset shift that makes WCAG compliance sustainable: accessibility semantics are not added later — they're part of the component's definition.</p>
+
+          <p>WCAG 2.2's Status Messages criterion (4.1.3, AA) requires that status updates — success confirmations, loading indicators, error counts, search result counts — are announced to screen readers without receiving focus. On iOS, use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">UIAccessibility.post(notification: .announcement, argument: message)</code>. On Android, use live regions with <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">ViewCompat.setAccessibilityLiveRegion()</code>. In Compose, use <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Modifier.semantics { liveRegion = LiveRegionMode.Polite }</code>.</p>
+
+          <p>Prompt the AI:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Whenever this list finishes loading, announce the result count to VoiceOver/TalkBack without moving focus. Use a polite announcement so it doesn't interrupt the user's current context."</p>
+          </blockquote>
+
+          <p>The AI generates the appropriate platform-specific live region or announcement call.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="platform-specific" class="text-zinc-900 dark:text-white">Beyond WCAG: Platform-Specific Accessibility Features</h2>
+
+          <p>WCAG provides the floor. Apple and Google each build significantly above it with platform-specific features that your app should support.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Apple's Accessibility Ecosystem</h3>
+
+          <p>Apple's accessibility toolkit goes deep, and the HIG provides specific guidance for each feature.</p>
+
+          <p><strong>VoiceOver</strong> is the screen reader, and it's the primary way blind and low-vision users interact with iOS apps. Beyond basic labeling, VoiceOver supports custom actions (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityAction</code>), custom rotor items (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityRotor</code>) for navigating between specific elements like headings, links, or custom categories, and custom content descriptions (<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">.accessibilityCustomContent</code>) for providing additional detail without cluttering the primary label.</p>
+
+          <p><strong>Dynamic Type</strong> goes beyond WCAG's 200% text resize requirement — Apple's accessibility sizes can reach 300% or more. Your layouts must accommodate this without truncation, overlap, or loss of functionality. Ask the AI to stress-test:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"How does this layout behave at the largest Dynamic Type accessibility size? Identify any text that would truncate, any layouts that would overlap, and any scrollable areas that might become unreachable."</p>
+          </blockquote>
+
+          <p><strong>Reduce Motion, Reduce Transparency, Increase Contrast, Differentiate Without Color, Bold Text</strong> — Apple provides a suite of display preferences that users can enable individually. Each has a corresponding API check, and your app should respect all of them. The AI can generate a centralized accessibility preferences manager:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a utility that observes all of Apple's accessibility display preferences and exposes them as reactive properties that my views can bind to."</p>
+          </blockquote>
+
+          <p><strong>Assistive Access</strong>, introduced in iOS 17, simplifies the entire device interface for users with cognitive disabilities. Apps that follow accessibility standards generally work in this mode, but the AI can help you verify:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Review this app's navigation structure for Assistive Access compatibility. Are the primary functions accessible within two taps? Are labels clear and concise? Are there any interaction patterns that require complex gestures?"</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">Google's Accessibility Ecosystem</h3>
+
+          <p><strong>TalkBack</strong> is Android's screen reader equivalent. It shares the same semantic requirements as VoiceOver — labels, roles, states, traversal order — but uses Android-specific APIs. The AI generates TalkBack-compatible code by default when using standard Compose or View components, but custom components need explicit annotation. Google's guidelines specifically recommend testing every user flow end-to-end with TalkBack enabled and adjusting the speech speed to catch issues with announcement verbosity.</p>
+
+          <p><strong>Switch Access</strong> allows interaction through one or more physical switches, and the AI can help you verify that all interactive elements are reachable through switch scanning:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Audit this screen for Switch Access compatibility. Ensure every interactive element is focusable, that the focus order is logical, and that no actions require gestures unavailable through switch scanning."</p>
+          </blockquote>
+
+          <p><strong>Live Captions, Sound Amplifier, Select to Speak</strong> — Android provides system-level accessibility features that your app should not interfere with. The AI helps by generating code that respects system accessibility service states and avoids overriding system accessibility behaviors.</p>
+
+          <p><strong>Material Design's accessibility audit checklist</strong> specifically recommends testing with TalkBack at 2x speed, verifying touch targets, checking color contrast with the Accessibility Scanner app, and using Layout Inspector to verify the accessibility tree. The AI can generate automated test scripts that replicate these manual checks.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="other-resources" class="text-zinc-900 dark:text-white">Other Accessibility Resources and Standards</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">The European Accessibility Act (EAA)</h3>
+
+          <p>Effective June 2025, the EAA requires that products and services sold in EU member states meet accessibility standards based on EN 301 549, which references WCAG 2.1 and is expected to adopt WCAG 2.2. If your app serves European users, WCAG AA compliance is not optional — it's a legal requirement. AI assistants can help you map your app's current state against EN 301 549's requirements and generate a remediation plan.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Section 508 (United States)</h3>
+
+          <p>Section 508 of the Rehabilitation Act requires federal agencies and their contractors to make electronic and information technology accessible. It references WCAG 2.0 Level AA, with movement toward WCAG 2.1/2.2 adoption. If your app targets government users or receives federal funding, the AI can generate the compliance documentation alongside the code fixes.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">WAI-ARIA for Hybrid and Web-Based Apps</h3>
+
+          <p>If your app uses web views, hybrid rendering (React Native Web, Flutter Web), or embedded HTML content, WAI-ARIA (Accessible Rich Internet Applications) roles and attributes become critical. The AI generates ARIA-compliant markup when producing web content: semantic HTML elements, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">role</code> attributes for custom widgets, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">aria-label</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">aria-describedby</code> for labeling, <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">aria-live</code> for dynamic content announcements, and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">aria-expanded</code>/<code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">aria-controls</code> for interactive disclosure patterns.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">The BBC Mobile Accessibility Guidelines</h3>
+
+          <p>The BBC publishes one of the most thorough mobile-specific accessibility guideline sets, covering areas where WCAG's web-centric language requires interpretation for native apps. It's an excellent supplementary resource, and the AI can help you cross-reference:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Compare my app's current accessibility implementation against the BBC Mobile Accessibility Guidelines and identify any gaps not already covered by my WCAG AA compliance work."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">The Inclusive Design Principles</h3>
+
+          <p>Microsoft's Inclusive Design framework — Recognize Exclusion, Learn from Diversity, Solve for One Extend to Many — provides a philosophical complement to WCAG's technical specifications. While WCAG tells you <em>what</em> to build, Inclusive Design tells you <em>why</em> and <em>for whom</em>. AI assistants can help operationalize these principles by generating persona-driven test scenarios:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a test plan that walks through the checkout flow from the perspective of a user with low vision using magnification, a user with motor impairment using Switch Control, and a user with cognitive disability who needs simple clear language."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="building-from-ground-up" class="text-zinc-900 dark:text-white">Building Accessibility From the Ground Up</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">The AI-Assisted Accessibility Architecture</h3>
+
+          <p>If you're starting a new project, accessibility should be a first-class architectural concern, not a layer added after visual design is complete.</p>
+
+          <p><strong>Step 1: Define your semantic component library.</strong> Before writing any feature code, ask the AI to generate a base component library where every component includes accessibility semantics by default:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a ButtonComponent, TextFieldComponent, CardComponent, and ListItemComponent. Each must include configurable accessibility labels, correct roles, state announcements for dynamic changes, and minimum touch target enforcement. Make it impossible to instantiate a ButtonComponent without providing an accessibility label."</p>
+          </blockquote>
+
+          <p>The "impossible without a label" constraint is powerful. By making the accessibility label a required parameter (not optional with a default), you eliminate the most common category of violation: forgotten labels. The AI generates the API, and the compiler enforces it.</p>
+
+          <p><strong>Step 2: Build your color system with contrast validation.</strong> Ask the AI to generate a theme system where every color token pair (text on surface, icon on background, etc.) is validated against WCAG contrast ratios at definition time:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a color theme system that validates contrast at initialization. If any foreground/background pair fails the 4.5:1 text ratio or 3:1 non-text ratio, log a warning in debug builds and throw an assertion failure in test builds."</p>
+          </blockquote>
+
+          <p>This makes contrast violations impossible to ship without deliberately suppressing the check.</p>
+
+          <p><strong>Step 3: Integrate accessibility testing into CI.</strong> The AI can generate automated accessibility test suites that run alongside your unit tests. For iOS, this means using Xcode's Accessibility Inspector API or third-party tools like AccessibilitySnapshot. For Android, this means Espresso's accessibility checks or Compose's semantics testing. For Flutter, this means the <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Semantics</code> widget assertions in widget tests.</p>
+
+          <p>Prompt:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Generate a test suite that verifies every screen in my app has no missing accessibility labels, no touch targets smaller than 44&times;44pt, no insufficient contrast ratios in the current theme, and that the VoiceOver traversal order matches the visual reading order."</p>
+          </blockquote>
+
+          <p>The AI generates the tests, and CI catches regressions before they reach users.</p>
+
+          <p><strong>Step 4: Create an accessibility overlay for development.</strong> Drawing from the first article in this series, build a debug overlay that visualizes accessibility information during development: element labels, touch target boundaries, contrast ratios, focus order numbers, and semantic roles. The AI generates this overlay as a diagnostic tool that makes accessibility visible to every developer on the team, not just those who remember to test with VoiceOver.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Automated Accessibility Auditing With AI</h3>
+
+          <p>Beyond generating accessible code, AI assistants can serve as continuous auditors.</p>
+
+          <p><strong>Code review for accessibility.</strong> When reviewing any PR, paste the code and ask:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Audit this code for WCAG 2.2 AA compliance. Check for missing accessibility labels, incorrect or missing roles, hardcoded text sizes, color-only state indicators, missing focus management in modal presentations, and touch targets below minimum size. For each violation, explain the WCAG criterion, the platform guideline it violates, and provide the fix."</p>
+          </blockquote>
+
+          <p><strong>Screen-by-screen audit.</strong> For existing apps, take screenshots or describe screens and ask the AI to identify potential violations:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"This screen shows a product grid with images, titles, prices, and a filter button. The filter uses a slider for price range. What WCAG 2.2 AA violations are likely present, and how should each be addressed?"</p>
+          </blockquote>
+
+          <p><strong>Accessibility test data generation.</strong> The AI generates test strings that stress accessibility edge cases: extremely long labels (to test truncation), right-to-left text (to test BiDi support), strings with special characters, and localized text at maximum length (German and Finnish strings that test layout expansion):</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Generate a set of test strings in 10 languages for this product name field, including the longest reasonable translation, to verify my layout doesn't break with Dynamic Type at maximum size."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="migrating" class="text-zinc-900 dark:text-white">Migrating an Existing App to WCAG Compliance</h2>
+
+          <p>For established apps, the path to compliance is a structured migration, not a single sprint. AI assistants make each phase faster and more systematic.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Phase 1: Audit and Triage</h3>
+
+          <p>Run automated scanning tools (Xcode Accessibility Inspector, Android Accessibility Scanner, axe for web views) to establish a baseline. Then feed the results to the AI:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Here are 47 accessibility violations from our automated scan. Categorize them by WCAG principle, severity (A vs AA vs AAA), estimated effort to fix (small/medium/large), and suggest an order of remediation that maximizes user impact per hour of work."</p>
+          </blockquote>
+
+          <p>The AI produces a prioritized backlog that puts high-impact, low-effort fixes first (missing labels on primary buttons, insufficient contrast on key text) and sequences the larger structural work (keyboard navigation, focus management, semantic restructuring) appropriately.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Phase 2: Foundation Fixes</h3>
+
+          <p>Address the violations that affect the entire app: color contrast across the theme, text scaling support, missing language declarations, and the semantic component library. These are foundational because they propagate to every screen.</p>
+
+          <p>Ask the AI to generate the fixes at the system level:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Update my color theme to meet WCAG AA contrast ratios. Here are my current tokens — for any pair that fails, suggest the minimum adjustment to the lighter or darker color that achieves compliance while preserving the brand identity."</p>
+          </blockquote>
+
+          <p>The AI makes mathematically precise adjustments, not guesses.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Phase 3: Screen-by-Screen Remediation</h3>
+
+          <p>Work through each screen with the AI as a pair programmer. For each screen, describe its purpose and paste its code. Ask the AI to add complete accessibility annotations: labels, roles, traits, groupings, headings, focus order, custom actions, and live region announcements. Review the output, test with VoiceOver/TalkBack, and refine.</p>
+
+          <p>This is where the conversational workflow is most valuable:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"VoiceOver is reading this card's elements in the wrong order — it reads the price before the product name. Reorder the accessibility elements so the name comes first, then the price, then the rating."</p>
+          </blockquote>
+
+          <p>The AI adjusts the semantic ordering without changing the visual layout.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Phase 4: Automated Regression Prevention</h3>
+
+          <p>Once compliance is achieved, it must be maintained. The AI generates the CI tests, linting rules, and code review checklists that prevent regression. A custom lint rule that flags missing accessibility labels on new components catches violations at the developer's desk, not in a quarterly audit.</p>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="ai-automation" class="text-zinc-900 dark:text-white">AI Automation Workflows for Ongoing Compliance</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">Pre-Commit Accessibility Linting</h3>
+
+          <p>Ask the AI to create a pre-commit hook or CI step that runs static analysis for common accessibility violations. On iOS, this might parse SwiftUI files for <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Image()</code> calls missing accessibility modifiers. On Android, it might check Compose code for <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Image()</code> composables without <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">contentDescription</code>. On Flutter, it might verify that <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Image</code> and <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">Icon</code> widgets include a <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">semanticLabel</code> or are wrapped in <code class="bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">ExcludeSemantics</code>.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Accessibility Snapshot Testing</h3>
+
+          <p>Visual regression testing catches unintended layout changes. Accessibility snapshot testing catches unintended semantic changes. The AI can help you build a snapshot testing infrastructure that captures the accessibility tree (not the visual rendering) of each screen and compares it against a baseline. If a label changes, a trait is removed, or the traversal order shifts, the test fails.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Continuous Monitoring in Production</h3>
+
+          <p>For production apps, the AI can help integrate lightweight accessibility telemetry: tracking which screens users access via VoiceOver/TalkBack (via the accessibility service active check), monitoring crash rates segmented by assistive technology usage, and flagging screens where assistive technology users show significantly higher abandonment rates. This data drives an informed, ongoing improvement cycle.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Automated Documentation Generation</h3>
+
+          <p>Compliance documentation — VPAT (Voluntary Product Accessibility Template) reports, conformance statements, remediation logs — is required by many enterprise customers and government procurement processes. The AI generates these documents from your test results:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Based on our accessibility test suite output, generate a VPAT 2.4 (WCAG 2.2 edition) report documenting our conformance level for each success criterion, with explanations for any partial conformance items."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="advanced-considerations" class="text-zinc-900 dark:text-white">Advanced Considerations</h2>
+
+          <h3 class="text-zinc-900 dark:text-white">Cognitive Accessibility</h3>
+
+          <p>WCAG 2.2 includes several criteria that address cognitive accessibility — Consistent Help (3.2.6, A), Redundant Entry (3.3.7, A), and Accessible Authentication (3.3.8, AA) — but the broader field of cognitive accessibility goes further. Clear language, simple navigation, consistent layout, forgiving error handling, and predictable behavior all contribute to an experience that works for users with cognitive disabilities, learning disabilities, and neurodivergent users.</p>
+
+          <p>AI assistants can evaluate your UI text for clarity:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Review all user-facing strings in this app for readability. Flag any instructions that use jargon, double negatives, or complex sentence structures. Suggest simplified alternatives that maintain the same meaning."</p>
+          </blockquote>
+
+          <p>The AI produces plain-language rewrites that benefit all users, not just those with cognitive disabilities.</p>
+
+          <h3 class="text-zinc-900 dark:text-white">Haptic and Multi-Sensory Feedback</h3>
+
+          <p>Both Apple and Google encourage multi-sensory feedback — haptics for confirmations, sounds for alerts, visual animations for state changes. The key principle is that no single sensory channel should be the only way information is conveyed. The AI can audit your feedback patterns:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Review all user feedback in this app — haptics, sounds, visual indicators, text messages. For each feedback event, verify that information is conveyed through at least two sensory channels."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">Localization and Accessibility Intersection</h3>
+
+          <p>Accessibility and internationalization intersect more than most teams realize. Screen readers need correct language attributes to pronounce text properly. Right-to-left languages require not just mirrored layouts but mirrored reading order in the accessibility tree. Currency, date, and number formatting must be both visually correct and correctly announced by assistive technology.</p>
+
+          <p>The AI handles these intersections by generating code that is simultaneously localization-aware and accessibility-aware:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create a price display component that formats the amount according to the user's locale, announces the full amount with currency name (not symbol) to VoiceOver, and reads correctly in both LTR and RTL layouts."</p>
+          </blockquote>
+
+          <h3 class="text-zinc-900 dark:text-white">Accessibility in Emerging Interaction Paradigms</h3>
+
+          <p>If you're building for visionOS (spatial computing), watchOS (glanceable interfaces), or Android Automotive (driving contexts), accessibility requirements adapt to the medium. Apple's HIG provides visionOS-specific accessibility guidance around spatial audio, gaze-based interaction, and hand tracking alternatives. Google's Automotive design guidelines address voice-first interaction patterns.</p>
+
+          <p>The AI helps you translate WCAG principles to these new paradigms:</p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"How do the WCAG 2.2 perceivable and operable principles apply to a visionOS app where the primary interaction is gaze and pinch? What accessibility alternatives should I provide for users who can't use gaze tracking?"</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="prompt-library" class="text-zinc-900 dark:text-white">A Practical AI Prompt Library for Accessibility</h2>
+
+          <p>Here are prompt patterns you can use immediately with any AI coding assistant:</p>
+
+          <p><strong>For new component creation:</strong></p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Create [component] with full accessibility support: labels, roles, traits, minimum touch targets, Dynamic Type support, and Reduce Motion alternatives. Make the accessibility label a required parameter."</p>
+          </blockquote>
+
+          <p><strong>For screen auditing:</strong></p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Audit this screen's code for WCAG 2.2 AA compliance. Check labels, contrast, touch targets, focus order, keyboard accessibility, error identification, and status announcements. List each violation with its WCAG criterion number and a code fix."</p>
+          </blockquote>
+
+          <p><strong>For migration planning:</strong></p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Given this list of accessibility violations, create a prioritized remediation plan ordered by user impact per engineering hour. Group fixes by type (theme-level, component-level, screen-level) and estimate effort for each."</p>
+          </blockquote>
+
+          <p><strong>For test generation:</strong></p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Generate accessibility tests for this screen: verify all images have labels, all interactive elements meet minimum touch target size, the focus order matches visual reading order, and all error states are announced to screen readers."</p>
+          </blockquote>
+
+          <p><strong>For documentation:</strong></p>
+
+          <blockquote class="border-zinc-300 bg-zinc-50 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+            <p class="italic mb-0">"Generate a VPAT 2.4 conformance report for this app based on the following accessibility test results. For each WCAG 2.2 AA criterion, report the conformance level and provide an explanation."</p>
+          </blockquote>
+
+          <hr class="border-zinc-200 dark:border-zinc-800" />
+
+          <h2 id="conclusion" class="text-zinc-900 dark:text-white">Conclusion</h2>
+
+          <p>WCAG compliance has always been the right thing to do. It has increasingly become the legally required thing to do. And now, with AI coding assistants, it has become the easy thing to do.</p>
+
+          <p>The pattern is consistent across every WCAG principle. The requirements are well-specified. The platform APIs exist. The implementation is structured, repetitive, and pattern-driven — exactly the kind of work AI handles best. What remained was the economic gap: the time and expertise required to apply the specification consistently, across every component, every screen, every interaction, in every app.</p>
+
+          <p>That gap is closed. An AI assistant that generates accessible components by default, audits existing code for violations, produces automated tests for regression prevention, and generates compliance documentation from test results gives a solo developer the same accessibility capability that previously required a dedicated specialist.</p>
+
+          <p>The question is no longer whether you can afford to make your app accessible. It's whether you can justify not doing it, when the cost has dropped to nearly zero and the tooling has never been better.</p>
+
+          <p>Build it accessible from the start. Your AI assistant is ready when you are.</p>
+
+        </article>
+
+        <!-- Follow section -->
+        <div class="mt-16 rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Enjoyed this article?</h3>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Follow me for more on mobile development, accessibility, and AI-assisted workflows.</p>
+          <div class="flex justify-center gap-4">
+            <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              LinkedIn
+            </a>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-200 px-6 py-12 dark:border-zinc-800">
+    <div class="mx-auto max-w-5xl">
+      <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-6">
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+          <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+          <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+          <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email"
+            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+        </a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const iconMenu = document.getElementById('icon-menu');
+      const iconClose = document.getElementById('icon-close');
+      menu.classList.toggle('hidden');
+      iconMenu.classList.toggle('hidden');
+      iconClose.classList.toggle('hidden');
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // TOC scroll highlighting
+    (function() {
+      var headings = document.querySelectorAll('.article-body h2[id]');
+      var tocLinks = document.querySelectorAll('.toc-link');
+      if (!headings.length || !tocLinks.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(link) { link.classList.remove('active'); });
+            var active = document.querySelector('.toc-link[data-target="' + entry.target.id + '"]');
+            if (active) active.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -75% 0px', threshold: 0 });
+      headings.forEach(function(h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

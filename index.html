@@ -85,10 +85,7 @@
       <span class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white">Hi.</span>
       <!-- Desktop nav -->
       <div class="hidden md:flex items-center gap-6">
-        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 36px;">
-        </a>
-        <a href="#projects" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Projects</a>
+        <a href="#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
         <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
         <a href="#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
         <a href="#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -102,11 +99,8 @@
           </svg>
         </button>
       </div>
-      <!-- Mobile: BMC + hamburger -->
+      <!-- Mobile: hamburger -->
       <div class="flex md:hidden items-center gap-2">
-        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 32px;">
-        </a>
         <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
           <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
@@ -120,7 +114,7 @@
     <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
       <div class="flex flex-col px-6 py-4 space-y-4">
-        <a href="#projects" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Projects</a>
+        <a href="#apps" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
         <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
         <a href="#about" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
         <a href="#contact" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -160,9 +154,9 @@
       </div>
     </section>
 
-    <!-- Projects -->
-    <section id="projects" class="mb-24 fade-in delay-2 scroll-mt-24">
-      <h2 class="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Projects</h2>
+    <!-- Apps -->
+    <section id="apps" class="mb-24 fade-in delay-2 scroll-mt-24">
+      <h2 class="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
         <!-- Ritualist -->
@@ -229,6 +223,70 @@
       </div>
     </section>
 
+    <!-- Articles -->
+    <section id="articles" class="mb-24 fade-in delay-2 scroll-mt-24">
+      <h2 class="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+        <a href="/articles/ai-powered-debug-menus.html"
+          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile</span>
+          </div>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower</h3>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">AI coding assistants have flipped the ROI on internal tooling. Here are 15 debug menu features you can scaffold in an afternoon.</p>
+          <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~15 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/ai-assisted-wcag-accessibility-compliance.html"
+          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Accessibility</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile</span>
+          </div>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought</h3>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">WCAG 2.2 dissected principle by principle, mapped to Apple's HIG and Google's Material Design, with AI-assisted workflows.</p>
+          <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~25 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/claude-code-crash-course.html"
+          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+          </div>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">The Claude Code Crash Course: From First Prompt to Autonomous Development Loops</h3>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">Everything you need to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, and the full extension ecosystem.</p>
+          <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~20 min read</span>
+          </div>
+        </a>
+
+      </div>
+      <div class="mt-8">
+        <a href="/articles.html"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+          View all articles
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
     <!-- About -->
     <section id="about" class="mb-24 fade-in delay-3 scroll-mt-24">
       <h2 class="mb-6 text-xs font-semibold uppercase tracking-widest text-zinc-500">About</h2>
@@ -268,7 +326,7 @@
       <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
         <!-- Footer nav -->
         <div class="flex flex-wrap items-center justify-center gap-6">
-          <a href="#projects" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Projects</a>
+          <a href="#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
           <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
           <a href="#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
           <a href="#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -295,8 +353,13 @@
           </a>
         </div>
       </div>
-      <div class="mt-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+        </a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+        </p>
       </div>
     </div>
   </footer>
@@ -322,8 +385,6 @@
     });
   </script>
 
-  <!-- Buy Me a Coffee floating widget -->
-  <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="vladblajovan" data-description="Support me on Buy me a coffee!" data-message="" data-color="#FFDD00" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 
 </body>
 </html>

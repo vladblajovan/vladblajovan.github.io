@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="alternate icon" href="/favicon.jpeg" type="image/jpeg"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
+  <title>Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance - Vlad Blajovan</title>
+  <meta name="description" content="How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fade-in 0.6s ease both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { animation: none; opacity: 1; }
+    }
+
+    .article-body h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.3;
+      scroll-margin-top: 7rem;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .article-body h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .article-body p {
+      margin-bottom: 1.25rem;
+      line-height: 1.8;
+    }
+
+    .article-body ul, .article-body ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+    }
+
+    .article-body li {
+      margin-bottom: 0.5rem;
+      line-height: 1.7;
+    }
+
+    .article-body blockquote {
+      border-left: 3px solid;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .article-body code {
+      font-size: 0.875em;
+      padding: 0.15em 0.4em;
+      border-radius: 0.25rem;
+    }
+
+    .article-body pre code {
+      padding: 0;
+    }
+
+    .article-body hr {
+      margin: 2.5rem 0;
+      border: none;
+      border-top: 1px solid;
+    }
+
+    .article-body strong {
+      font-weight: 600;
+    }
+
+    .toc-link.active {
+      color: #18181b;
+      border-left-color: #18181b;
+      font-weight: 500;
+    }
+    .dark .toc-link.active {
+      color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    #toc::-webkit-scrollbar { width: 3px; }
+    #toc::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    .dark #toc::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-white text-zinc-900 antialiased dark:bg-black dark:text-white">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <button onclick="toggleTheme()" aria-label="Toggle theme"
+          class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
+          <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <svg class="h-4 w-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="flex md:hidden items-center gap-2">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+          <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+          </svg>
+          <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
+      <div class="flex flex-col px-6 py-4 space-y-4">
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-6 pt-32 pb-24">
+    <div class="fade-in">
+      <!-- Back link -->
+      <a href="/articles.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-8">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+        </svg>
+        Back to Articles
+      </a>
+
+      <div class="relative lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <!-- TOC sidebar -->
+        <aside class="hidden lg:block">
+          <nav id="toc" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">Contents</h4>
+            <ul class="space-y-2 text-sm border-l border-zinc-200 dark:border-zinc-800">
+              <li><a href="#before-code" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="before-code">Before You Code</a></li>
+              <li><a href="#data-source-strategy" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="data-source-strategy">Data Source Strategy</a></li>
+              <li><a href="#testing" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="testing">Testing</a></li>
+              <li><a href="#performance" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="performance">Performance</a></li>
+              <li><a href="#decoupling" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="decoupling">Decoupling</a></li>
+              <li><a href="#internationalization" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="internationalization">Internationalization</a></li>
+              <li><a href="#feedback-loops" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="feedback-loops">Feedback Loops</a></li>
+              <li><a href="#after-shipping" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="after-shipping">After Shipping</a></li>
+              <li><a href="#before-building" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="before-building">Before Building</a></li>
+              <li><a href="#while-building" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="while-building">While Building</a></li>
+              <li><a href="#after-building" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="after-building">After Building</a></li>
+              <li><a href="#the-larger-point" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="the-larger-point">The Larger Point</a></li>
+            </ul>
+          </nav>
+        </aside>
+
+        <div class="max-w-3xl">
+          <header class="mb-12">
+            <h1 class="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4">Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+              <span>Vlad Blajovan</span>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <time datetime="2026-03-08">March 8, 2026</time>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <span>~20 min read</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+            </div>
+          </header>
+
+          <article class="article-body text-zinc-700 dark:text-zinc-300">
+
+            <p>There's a persistent myth in software development that doing things properly &mdash; clean architecture, dependency injection, comprehensive testing, proper abstractions &mdash; is slower than hacking something together and fixing it later. That myth survives because, historically, there was a grain of truth in it. Writing an interface, an implementation, a mock, a factory, and a test for every data source <em>is</em> slower than just calling the API directly from your view controller. The ceremony-to-progress ratio felt punishing, especially for solo developers and small teams under deadline pressure.</p>
+
+            <p>AI coding assistants have obliterated that tradeoff.</p>
+
+            <p>The ceremony &mdash; the boilerplate, the protocol definitions, the mock implementations, the test scaffolds &mdash; is exactly the kind of structured, repetitive, pattern-following code that AI generates fluently and tirelessly. What used to be the tax on good architecture is now nearly free. The strategic thinking &mdash; deciding <em>what</em> to abstract, <em>where</em> to draw boundaries, <em>which</em> patterns fit your actual problem &mdash; still requires a human mind. But the human mind now has a tireless collaborator that can materialize those decisions into working code as fast as you can articulate them.</p>
+
+            <p>This article is about what that changes. Not just in the opening days of a project, but across its entire lifecycle: before you write the first line of code, while you're building, and long after you've shipped.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="before-code" class="text-zinc-900 dark:text-white">Before You Write a Line of Code</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Architecture as a Conversation</h3>
+
+            <p>The single most valuable thing you can do with an AI assistant before starting a project is <em>argue about architecture</em>. Not ask for architecture &mdash; argue about it.</p>
+
+            <p>Describe your app's requirements, expected scale, team size, and deployment targets. Then propose an architecture and ask the AI to challenge it. <em>"I'm building a cross-platform task management app in Flutter targeting iOS and Android. I'm planning to use Clean Architecture with BLoC for state management. Here's my initial layer breakdown &mdash; what are the weakest points in this plan for a solo developer?"</em></p>
+
+            <p>The AI won't just validate your choices. It will probe at the seams: Are you over-engineering the domain layer for an app with limited business logic? Is BLoC the right fit, or would Riverpod give you the same testability with less boilerplate given your team size? Do you actually need a separate data layer for local caching, or is your app predominantly online-first?</p>
+
+            <p>This isn't the AI making your architectural decisions. It's stress-testing them before you've committed to code. The cost of changing your mind about a repository interface at the whiteboard stage is zero. The cost of changing it six months into development is enormous.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Defining Layer Boundaries With Precision</h3>
+
+            <p>Clean architecture is a family of ideas, not a single blueprint. The AI assistant becomes invaluable when you need to translate principles into concrete boundaries for <em>your</em> specific project.</p>
+
+            <p>Start by describing your domain. <em>"My app manages workout routines. Users create routines composed of exercises, each with sets, reps, and weight targets. Routines can be shared between users and synced across devices."</em> Then ask the AI to propose a layer structure with explicit rules about what each layer can and cannot depend on.</p>
+
+            <p>The result will typically be something like: a domain layer containing pure data models and business logic with zero framework imports; a data layer defining repository protocols and data source abstractions; an infrastructure layer implementing those protocols against real APIs, local databases, and in-memory stores; and a presentation layer connecting everything to UI. Crucially, the AI will spell out the dependency rules &mdash; the domain layer knows nothing about Flutter, SwiftUI, Jetpack Compose, or any external framework. The data layer defines interfaces but contains no implementation details. Dependencies flow inward.</p>
+
+            <p>These rules sound obvious when stated. They become powerful when enforced. And they become enforceable when every layer has clearly defined protocols that the AI can help you generate, implement, and test systematically.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Identifying Design Patterns From Actual Needs</h3>
+
+            <p>One of the most common architectural mistakes is reaching for a design pattern because it sounds sophisticated rather than because the problem demands it. AI assistants can flip this dynamic.</p>
+
+            <p>Instead of asking <em>"should I use the Repository pattern?"</em>, describe your actual data access requirements: <em>"My app reads workout data from a REST API, caches it in a local SQLite database for offline use, and needs to optimistically update the UI before server confirmation arrives."</em> The AI will identify that this naturally calls for a Repository pattern (to abstract the data source), a Strategy or a simple interface-based injection (to swap between remote, local, and optimistic sources), and possibly a Unit of Work or queue pattern (to manage pending server syncs).</p>
+
+            <p>The conversation continues from there. <em>"Do I need a separate Use Case class for every user action, or is that overkill for my scale?"</em> This is the kind of design question that has no universal answer &mdash; it depends on your project's complexity, your team's conventions, and how much business logic sits between the UI and the data layer. The AI can lay out the tradeoffs concretely: Use Cases add indirection but make testing trivial and keep your presentation layer thin; for a simple CRUD app, they might be overhead; for an app with authorization rules, validation logic, and cross-entity operations, they're almost certainly worth it.</p>
+
+            <p>The point is that the AI helps you arrive at patterns through requirements analysis rather than cargo-culting. Every pattern in your codebase exists because you discussed why it belongs there.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="data-source-strategy" class="text-zinc-900 dark:text-white">The Data Source Strategy: Real, Local, Mock, and Stub</h2>
+
+            <p>This is where AI-assisted architecture pays its most immediate dividends. The ability to swap data sources &mdash; transparently, reliably, without touching business logic or UI code &mdash; is the foundation on which testability, offline support, and development velocity all rest.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Designing the Abstraction</h3>
+
+            <p>Start with the protocol. Every data source operation your app needs gets defined as a method on an interface (a protocol in Swift, an abstract class in Dart, an interface in Kotlin). The AI generates these quickly from a description of your domain operations:</p>
+
+            <p><em>"I need a WorkoutRepository with methods for fetching all workouts for a user, fetching a single workout by ID, creating a workout, updating a workout, and deleting a workout. Each method should return a Result type that captures both success and typed errors."</em></p>
+
+            <p>From that single prompt, the AI produces the interface. From a follow-up prompt, it produces four implementations: one that calls your REST API, one that reads from a local SQLite database, one that returns hardcoded test data, and one that returns configurable responses for unit testing. Each implementation conforms to the same interface. Each can be injected anywhere the interface is expected.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Injection Based on Context</h3>
+
+            <p>The next step is wiring the right implementation to the right context. This is dependency injection at its most practical, and the AI handles the configuration fluently.</p>
+
+            <p>In your production app, the DI container (whether it's Swinject, get_it, Koin, Hilt, or a manual composition root) registers the real API-backed implementation. In your integration tests, it registers the local database implementation seeded with known data. In your unit tests, it registers mocks or stubs with predetermined responses. In your SwiftUI previews or Flutter widget tests, it registers the hardcoded test data source so previews render instantly without network access.</p>
+
+            <p>Ask your AI assistant to <em>"generate the DI registration for each environment &mdash; production, integration test, unit test, and preview &mdash; using get_it, with the WorkoutRepository as the example"</em> and you'll get clean, environment-specific setup code that makes the swap explicit and auditable.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">The Payoff: Developing Against Local Data</h3>
+
+            <p>One underappreciated benefit of this architecture is development speed. When your app can run entirely against local or mock data, you eliminate the backend as a bottleneck. The API isn't ready yet? Doesn't matter &mdash; define the contract, generate a local implementation, and build the entire feature end to end. When the real API materializes, you swap one line in your DI configuration.</p>
+
+            <p>This is not a theoretical benefit. It changes the daily rhythm of development. No more waiting for backend deploys. No more broken staging environments blocking frontend work. No more debugging whether a problem is in your code or in the server's latest release. Each layer is independently runnable and verifiable.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="testing" class="text-zinc-900 dark:text-white">Testing That's Worth Writing</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Why Clean Architecture Makes Tests Non-Flaky</h3>
+
+            <p>Flaky tests are almost always a symptom of hidden dependencies: tests that rely on network connectivity, database state left by a previous test, system time, filesystem access, or race conditions in asynchronous code. Clean architecture, by definition, makes these dependencies explicit and injectable. When every external dependency enters through an interface, every test controls its environment completely.</p>
+
+            <p>This means the AI can generate tests that are deterministic by construction, not by luck. Ask for <em>"unit tests for the CreateWorkout use case, covering successful creation, validation failure when the routine name is empty, and network error from the repository"</em> and the result uses a mock repository that returns exactly what each test scenario requires. No real network. No real database. No flakiness.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Choosing What to Test</h3>
+
+            <p>AI assistants are surprisingly good at helping you make the strategic decision of <em>what deserves a test</em>. Describe a class and ask: <em>"What are the meaningful test cases for this component? Focus on behavior that could actually break in production and skip trivial getter/setter coverage."</em></p>
+
+            <p>The AI will typically distinguish between logic that warrants unit tests (business rules, validation, state transitions, error handling), integration points that warrant integration tests (database queries returning correct results, API client parsing real response shapes), and UI flows that warrant end-to-end tests (critical user journeys like signup, purchase, core feature usage). It will also identify code that explicitly <em>doesn't</em> need its own tests &mdash; pure data classes, pass-through delegators, trivially simple mappings &mdash; saving you from the false comfort of high coverage percentages that test nothing meaningful.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Generating Tests at Scale</h3>
+
+            <p>Once the architecture is in place, test generation becomes almost mechanical. The AI has the interface definition, the implementation, and the pattern for mock creation. Ask it to <em>"generate comprehensive tests for the WorkoutRepository's SQLite implementation, including edge cases for empty results, database errors, concurrent access, and migration from schema v1 to v2"</em> and you'll get a thorough test suite that would have taken a full day to write by hand.</p>
+
+            <p>More importantly, when you change the implementation, you can describe the change to the AI and ask it to update the tests accordingly. The tests evolve with the code instead of falling behind and becoming maintenance burdens.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Testing as Specification</h3>
+
+            <p>There's a powerful inversion available here. Instead of writing code first and tests second, describe the <em>behavior you want</em> to the AI and ask it to generate the test first. <em>"Write a test that verifies: when a user tries to create a workout with more than 50 exercises, the system rejects it with a validation error explaining the limit."</em> The AI writes the test. You then ask it to implement the code that makes the test pass. This is test-driven development without the cognitive overhead of manually writing the test scaffolding &mdash; the part that makes TDD feel slow.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="performance" class="text-zinc-900 dark:text-white">Performance: Measured, Not Assumed</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">AI-Assisted Performance Assessment</h3>
+
+            <p>Performance optimization without measurement is guesswork. AI assistants help you instrument first and optimize second.</p>
+
+            <p>Describe your app's critical paths &mdash; <em>"the workout list screen loads all workouts, sorts them by date, groups them by week, and renders each with a calculated total volume"</em> &mdash; and ask the AI to identify potential performance bottlenecks and suggest instrumentation points. The AI will flag the O(n log n) sort on potentially large lists, the grouping operation that creates intermediate collections, the total volume calculation that might trigger repeated iterations, and the rendering of large lists without virtualization.</p>
+
+            <p>For each concern, it suggests a measurement strategy before a solution. <em>"Wrap the sort and group operations in timing spans. Log the item count alongside duration. Add a frame budget indicator to the list screen. Measure first, then decide whether optimization is needed."</em> This disciplined approach prevents premature optimization &mdash; one of the most common time sinks in app development &mdash; while ensuring real problems don't go unnoticed.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Profiling in Real-World Scenarios</h3>
+
+            <p>Combine performance instrumentation with the synthetic data scenarios discussed in the previous article, and you get something powerful: reproducible performance benchmarks across data volumes. Load the app with 50 workouts and record render times. Load it with 5,000 and record again. The AI can generate a simple benchmarking harness that runs your critical paths against small, medium, and large datasets and produces a comparison table.</p>
+
+            <p>This data turns performance conversations from opinions (<em>"it feels slow"</em>) into evidence (<em>"list render time grows linearly up to 500 items but quadratically beyond that due to the grouping algorithm"</em>).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Live Performance Monitoring</h3>
+
+            <p>For production apps, the AI can help you integrate lightweight performance telemetry &mdash; startup time, screen transition durations, time to interactive for key screens &mdash; that reports to your analytics pipeline. Ask for <em>"a performance monitoring utility that tracks screen render time from navigation start to first meaningful paint, reports it as a custom analytics event, and triggers an alert if p95 exceeds 500ms."</em> The result gives you production visibility into the metrics that matter most to users.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="decoupling" class="text-zinc-900 dark:text-white">Decoupling the Things That Change</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Backend Data Types vs Domain Models</h3>
+
+            <p>APIs change. Backend teams rename fields, nest objects differently, change date formats, or version their endpoints. If your UI code directly consumes API response types, every backend change ripples through your entire codebase.</p>
+
+            <p>The solution is mapping layer: API response DTOs (Data Transfer Objects) map to domain models at the boundary, and only domain models flow through the rest of the app. The AI generates these mappers fluently. Describe your API response shape and your desired domain model, and ask for <em>"a mapper that converts the API WorkoutResponse to my domain Workout model, handling the nested exercise format, converting ISO 8601 strings to Date objects, and defaulting missing optional fields."</em></p>
+
+            <p>When the API changes &mdash; and it will &mdash; you update one mapper. The domain model, business logic, and UI remain untouched.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Swapping UI Frameworks</h3>
+
+            <p>This sounds radical, but clean architecture makes it genuinely feasible. If your business logic and data layer have zero UI framework dependencies, migrating from UIKit to SwiftUI, from XML Views to Jetpack Compose, or from one design system to another becomes a presentation layer concern. You're rewriting views, not restructuring logic.</p>
+
+            <p>AI assistants make this particularly practical because they're fluent in multiple UI frameworks simultaneously. Paste a SwiftUI view and ask: <em>"Rewrite this screen in UIKit, keeping the same ViewModel interface."</em> Or take a Material Design Compose screen and ask for a Cupertino-styled Flutter equivalent. The business logic stays identical; only the rendering layer changes.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Design Language Systems and Theming</h3>
+
+            <p>A design system isn't just colors and fonts &mdash; it's a contract between design and engineering. The AI can help you build that contract as code: a theme configuration that defines every semantic color (primary, surface, error, onPrimary), typography scale (heading, body, caption, with sizes and weights), spacing values, corner radii, and elevation levels as named tokens rather than hardcoded values.</p>
+
+            <p>Ask the AI to <em>"create a theme system where every visual property is defined as a semantic token, with a Material 3 implementation and a custom brand implementation that can be swapped at runtime."</em> The result means your app's entire visual identity can change without touching a single screen's layout code. It also means dark mode, high contrast mode, and brand-specific theming are just alternative token mappings &mdash; not separate UI implementations.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="internationalization" class="text-zinc-900 dark:text-white">Internationalization From Day One</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Why i18n is an Architectural Decision</h3>
+
+            <p>Internationalization (i18n) added late in a project is a nightmare of string extraction, layout breakage, and overlooked hardcoded text. Internationalization adopted from day one is nearly invisible &mdash; just a convention that every user-facing string goes through a localization function.</p>
+
+            <p>The AI assistant enforces this convention effortlessly. When generating any UI code, prompt it with: <em>"All user-facing strings must use the localization system, never hardcoded. Generate the screen and the corresponding localization keys."</em> Every screen comes with its string catalog entries pre-defined. No hardcoded strings slip through.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Beyond String Translation</h3>
+
+            <p>True internationalization goes deeper than translating text. It includes date, time, and number formatting appropriate to the user's locale. It includes right-to-left layout support for Arabic and Hebrew. It includes pluralization rules that vary by language (English has two forms; Arabic has six). It includes handling text that expands dramatically when translated (German labels can be 30-40% longer than English equivalents).</p>
+
+            <p>AI assistants are well-equipped to generate locale-aware formatting utilities and to flag potential layout issues. Ask: <em>"Review this screen layout for i18n readiness. Will it handle RTL? Will it accommodate German-length strings without truncation? Are the date formatters using the user's locale?"</em> The AI audits systematically, catching issues that manual review frequently misses.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Localization Workflow Integration</h3>
+
+            <p>For teams, the AI can generate the integration code that bridges your app's string catalogs with external localization platforms (Phrase, Lokalise, Crowdin). It can produce scripts that export new keys, import completed translations, and validate that no keys are missing across supported locales. This automation turns localization from a bottleneck into a pipeline.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="feedback-loops" class="text-zinc-900 dark:text-white">Feedback Loops: Closing the Gap Between Users and Developers</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">In-App Feedback Tools</h3>
+
+            <p>The shortest path from a user experiencing a problem to a developer understanding it is an in-app feedback mechanism. Tools like Wiredash (for Flutter), Instabug, Shake, or UserSnap let users annotate screenshots, record their actions, and submit reports enriched with device metadata, all without leaving the app.</p>
+
+            <p>AI assistants help you integrate these tools and customize them for your specific needs. But beyond integrating a third-party SDK, the AI can help you build bespoke feedback flows: a <em>"report a problem"</em> button that automatically captures the current screen's state, the last 50 user actions from the event log, recent network errors, the user's account metadata, and the device's performance telemetry &mdash; then bundles everything into a structured report that routes to your issue tracker.</p>
+
+            <p>Ask the AI to <em>"create a feedback reporter that captures a screenshot, the current navigation stack, the last 30 analytics events, and device info, then formats it as a GitHub issue body and submits it via the GitHub API."</em> The result is a feedback loop where user reports arrive pre-triaged, with reproduction context that would otherwise take five back-and-forth emails to establish.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Beta Distribution and Staged Rollouts</h3>
+
+            <p>The feedback loop extends beyond bug reports to structured beta testing. The AI can help you configure TestFlight, Firebase App Distribution, or Play Console internal testing tracks, and generate the onboarding flows that guide beta testers toward the features you want validated.</p>
+
+            <p>More powerfully, it can help you implement staged rollout logic: release a feature to 5% of users, monitor crash rates and performance telemetry, and automatically increase the rollout percentage if metrics stay healthy. This requires integrating feature flags, analytics, and deployment configuration &mdash; exactly the kind of cross-cutting concern where AI-assisted code generation saves hours of glue work.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Capturing Qualitative Feedback</h3>
+
+            <p>Not every important signal is a bug report. Sometimes you need to know how users <em>feel</em> about a feature. The AI can help you build lightweight in-app surveys that appear at contextually appropriate moments &mdash; after completing a new workflow for the first time, after a session lasting more than ten minutes, or after the third use of a specific feature. Keep them short (one to three questions), respect frequency limits (never show more than one per week), and pipe responses to wherever your team reviews feedback.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="after-shipping" class="text-zinc-900 dark:text-white">After You Ship: Maintaining Architectural Health</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Architectural Fitness Functions</h3>
+
+            <p>Over time, codebases drift from their intended architecture. A developer takes a shortcut and imports a UI framework in the domain layer. Someone puts business logic in a view model because it was faster. These small violations accumulate until the architecture exists only in documentation, not in code.</p>
+
+            <p>AI assistants can help you build automated fitness functions &mdash; tests that verify architectural rules. <em>"Write a test that fails if any file in the domain layer imports UIKit, SwiftUI, or any Flutter package." "Write a test that ensures every repository protocol has at least one mock implementation in the test target." "Write a test that verifies no presentation layer file directly imports a network or database module."</em></p>
+
+            <p>These tests run in CI alongside your unit tests. They catch architectural violations at the pull request stage, before they merge. The AI generates them from plain-language rules, making it easy to add new constraints as your architecture evolves.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Dependency Auditing</h3>
+
+            <p>Your app's dependency graph &mdash; the third-party packages it relies on &mdash; is both a productivity multiplier and a risk surface. AI assistants can help you audit dependencies systematically: identify packages that haven't been updated in over a year, flag packages with known vulnerabilities, assess the maintenance health of key dependencies, and suggest alternatives where risk is high.</p>
+
+            <p>More concretely, ask the AI to <em>"review my pubspec.yaml and identify any dependencies that are unmaintained, have open security advisories, or whose functionality could be replaced with a small amount of custom code."</em> The result is a maintenance-aware dependency strategy rather than an accumulation of packages you added once and forgot about.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Documentation That Stays Current</h3>
+
+            <p>Architecture documentation rots faster than code. The AI can help you generate documentation that's tied to your actual codebase rather than an idealized version of it. Paste your actual folder structure and key files and ask: <em>"Generate an architecture overview document based on what this code actually does, not what it was intended to do."</em> The result reflects reality, which is where useful documentation starts.</p>
+
+            <p>Better yet, create a living architecture document as a Markdown file in your repository. When you make significant changes, ask the AI to update the relevant sections based on the code diff. Documentation maintenance becomes a two-minute task instead of a perpetually deferred chore.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="before-building" class="text-zinc-900 dark:text-white">Things to Keep in Mind Before Building</h2>
+
+            <p><strong>Define your "done" criteria for architecture.</strong> Decide upfront how much abstraction your project warrants. A weekend prototype doesn't need five layers and an event bus. A production app serving thousands of users probably does. AI assistants default to thoroughness; it's your job to calibrate.</p>
+
+            <p><strong>Map your domain before you map your screens.</strong> Spend time with the AI discussing your business entities, their relationships, and their lifecycle before you discuss how they appear on screen. The domain model drives everything; getting it right early prevents cascading refactors later.</p>
+
+            <p><strong>Choose your testing strategy explicitly.</strong> Decide which layers get unit tests, which get integration tests, and which (if any) get end-to-end tests. Make this a conscious allocation of effort, not an accident of what was easiest to test.</p>
+
+            <p><strong>Plan for the API you'll have, not the one you want.</strong> If your backend is still under development, define the contract (OpenAPI spec, GraphQL schema) collaboratively with the backend team and generate your DTOs and mappers from it. The AI can consume an API spec and produce the complete data layer &mdash; models, mappers, and mock implementations &mdash; in one pass.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="while-building" class="text-zinc-900 dark:text-white">Things to Keep in Mind While Building</h2>
+
+            <p><strong>Resist the urge to skip the abstraction.</strong> When you're in flow and the feature is almost working, it's tempting to call the API directly from the view <em>"just this once."</em> The AI makes the proper path &mdash; creating the protocol, the implementation, and the injection &mdash; fast enough that the shortcut saves no meaningful time. Take the three minutes now to avoid the three hours of refactoring later.</p>
+
+            <p><strong>Review AI-generated code for hidden coupling.</strong> AI assistants sometimes introduce subtle dependencies &mdash; importing a platform framework in a layer that should be platform-agnostic, using a concrete class where a protocol was intended, or hardcoding a configuration value that should be injected. Treat AI-generated code with the same review rigor as a junior developer's pull request: structurally sound, occasionally misses the bigger picture.</p>
+
+            <p><strong>Use the AI to rubber-duck your design decisions.</strong> When you're unsure whether a pattern fits, describe the problem and the candidate solutions and ask the AI to play devil's advocate for each option. <em>"I'm considering either a Coordinator pattern or a Router pattern for navigation. Here's my navigation complexity &mdash; argue against each approach."</em> The resulting analysis often reveals considerations you hadn't weighed.</p>
+
+            <p><strong>Keep your DI container honest.</strong> As the app grows, it's easy for the dependency injection configuration to become a tangled mess of registrations and overrides. Periodically ask the AI to review your DI setup and flag circular dependencies, registrations that are never resolved, or scoping issues (a singleton holding a reference to a transient dependency).</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="after-building" class="text-zinc-900 dark:text-white">Things to Keep in Mind After Building</h2>
+
+            <p><strong>Monitor what you measured.</strong> The instrumentation you added during development &mdash; timing spans, performance telemetry, error tracking &mdash; should feed dashboards that someone actually looks at. Ask the AI to help you set up alerts for meaningful thresholds: startup time regression, crash rate spikes, API error rate increases.</p>
+
+            <p><strong>Revisit your architecture quarterly.</strong> Schedule a conversation (with your team or with your AI assistant) to review whether the architecture is still serving the project. Has the app's scope changed enough to warrant new layers or patterns? Are there abstractions that add complexity without providing value? Are there areas where the architecture has been quietly bypassed?</p>
+
+            <p><strong>Automate your upgrade path.</strong> Framework updates, language version bumps, and dependency upgrades should be routine, not events. The AI can generate migration scripts, update deprecated API calls, and adapt your code to new framework conventions. When Swift introduces a new concurrency feature or Flutter changes its navigation API, the AI helps you adopt it incrementally instead of putting it off until the migration becomes a project unto itself.</p>
+
+            <p><strong>Treat your test suite as a living system.</strong> Tests that haven't been updated in months are tests that might be passing for the wrong reasons. When features change, update the tests in the same PR. When the AI generates new code, ask it to generate the corresponding tests in the same conversation. Tests and code should always move together.</p>
+
+            <p><strong>Invest in developer onboarding.</strong> A well-architected codebase is only valuable if new team members can understand and navigate it. Ask the AI to generate an onboarding guide based on your actual project structure: <em>"Here's our folder structure and our key architectural components. Write a guide that would help a new developer understand where to put new code, how to add a new feature end to end, and how to run and write tests."</em></p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="the-larger-point" class="text-zinc-900 dark:text-white">The Larger Point</h2>
+
+            <p>Clean architecture was never technically difficult. It was <em>economically</em> difficult. The gap between knowing the right structure and actually implementing it &mdash; across every feature, every test, every data source, every edge case &mdash; was too expensive for the pace most teams operate at.</p>
+
+            <p>AI coding assistants have closed that gap. The cost of doing things properly is now so close to the cost of doing things carelessly that the only rational choice is to build it right. The abstractions that make your app testable, maintainable, adaptable, and observable are no longer luxuries reserved for well-funded teams. They are the default path for anyone willing to have a conversation with an AI about how their software should be structured.</p>
+
+            <p>The app you build today will be maintained for years. The API it talks to will change. The UI framework it uses will evolve. The team working on it will turn over. The user base will grow in ways you didn't predict. Clean architecture, adopted from the start and maintained with discipline, is what makes all of that manageable.</p>
+
+            <p>And now, for the first time, it's also the fastest way to build.</p>
+
+          </article>
+
+          <!-- Enjoyed this article? -->
+          <div class="mt-16 rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Enjoyed this article?</h3>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Follow me for more on mobile development, accessibility, and AI-assisted workflows.</p>
+            <div class="flex justify-center gap-4">
+              <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-zinc-200 px-6 py-12 dark:border-zinc-800">
+    <div class="mx-auto max-w-5xl">
+      <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-6">
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+          <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+          <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+          <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+          <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+        </a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const iconMenu = document.getElementById('icon-menu');
+      const iconClose = document.getElementById('icon-close');
+      menu.classList.toggle('hidden');
+      iconMenu.classList.toggle('hidden');
+      iconClose.classList.toggle('hidden');
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // TOC scroll highlighting
+    (function() {
+      var headings = document.querySelectorAll('.article-body h2[id]');
+      var tocLinks = document.querySelectorAll('.toc-link');
+      if (!headings.length || !tocLinks.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(link) { link.classList.remove('active'); });
+            var active = document.querySelector('.toc-link[data-target="' + entry.target.id + '"]');
+            if (active) active.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -75% 0px', threshold: 0 });
+      headings.forEach(function(h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

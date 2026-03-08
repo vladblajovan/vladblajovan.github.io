@@ -50,10 +50,8 @@
       <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
       <!-- Desktop nav -->
       <div class="hidden md:flex items-center gap-6">
-        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 36px;">
-        </a>
-        <a href="/#projects" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Projects</a>
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
         <a href="/articles.html" class="text-sm font-medium text-zinc-900 dark:text-white">Articles</a>
         <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
         <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -67,11 +65,8 @@
           </svg>
         </button>
       </div>
-      <!-- Mobile: BMC + hamburger -->
+      <!-- Mobile: hamburger -->
       <div class="flex md:hidden items-center gap-2">
-        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 32px;">
-        </a>
         <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
           <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
@@ -85,7 +80,8 @@
     <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
       <div class="flex flex-col px-6 py-4 space-y-4">
-        <a href="/#projects" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Projects</a>
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
         <a href="/articles.html" class="text-base font-medium text-zinc-900 dark:text-white">Articles</a>
         <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
         <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -96,12 +92,132 @@
   <main class="mx-auto max-w-5xl px-6 pt-32 pb-24">
     <section class="fade-in">
       <h1 class="mb-6 text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h1>
-      <div class="max-w-md">
-        <p class="mb-4 text-zinc-500 dark:text-zinc-400">Articles are on the way. I'll be writing about iOS development, privacy-first design, and building indie apps.</p>
+
+      <!-- Label filters -->
+      <div class="mb-8 flex flex-wrap gap-2">
+        <button onclick="filterByTag('all')" data-tag="all"
+          class="tag-btn active rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-900 bg-zinc-900 !text-white transition hover:border-zinc-400 dark:border-zinc-600 dark:bg-white dark:!text-black">All</button>
+        <button onclick="filterByTag('Developer Tools')" data-tag="Developer Tools"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">Developer Tools</button>
+        <button onclick="filterByTag('AI')" data-tag="AI"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">AI</button>
+        <button onclick="filterByTag('Mobile Development')" data-tag="Mobile Development"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">Mobile Development</button>
+        <button onclick="filterByTag('Accessibility')" data-tag="Accessibility"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">Accessibility</button>
+        <button onclick="filterByTag('Architecture')" data-tag="Architecture"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">Architecture</button>
+        <button onclick="filterByTag('Server-Driven UI')" data-tag="Server-Driven UI"
+          class="tag-btn rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">Server-Driven UI</button>
+      </div>
+
+      <!-- Article cards -->
+      <div id="articles-grid" class="grid gap-6 sm:grid-cols-2">
+        <a href="/articles/ai-powered-debug-menus.html" data-tags="Developer Tools,AI,Mobile Development"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">AI coding assistants have flipped the ROI on internal tooling. Here are 15 debug menu features you can scaffold in an afternoon — and why every app should ship with them.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~15 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/ai-assisted-wcag-accessibility-compliance.html" data-tags="Accessibility,AI,Mobile Development"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Accessibility</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">WCAG 2.2 dissected principle by principle, mapped to Apple's HIG and Google's Material Design, with AI-assisted workflows to build compliance from the ground up.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~25 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/claude-code-crash-course.html" data-tags="Developer Tools,AI"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">The Claude Code Crash Course: From First Prompt to Autonomous Development Loops</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">Everything you need to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, Remote Control, agent teams, and the full extension ecosystem.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~20 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/ai-assisted-clean-architecture.html" data-tags="Architecture,AI,Mobile Development"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~20 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/server-driven-ui-mobile-guide.html" data-tags="Server-Driven UI,Architecture,Mobile Development"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Server-Driven UI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">A comprehensive guide to SDUI: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, accessibility, and migration strategies.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~30 min read</span>
+          </div>
+        </a>
+
+        <a href="/articles/sdui-deep-dive-parser-architecture.html" data-tags="Server-Driven UI,Architecture,Mobile Development"
+          class="article-card group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Server-Driven UI</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+            <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+          </div>
+          <h2 class="mb-2 text-lg font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield</h2>
+          <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400">A technical deep dive into SDUI parser architecture: component registries vs. switch statements, recursive rendering, the Visitor pattern, and where OpenAPI code generators break.</p>
+          <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+            <time datetime="2026-03-08">March 8, 2026</time>
+            <span>&middot;</span>
+            <span>~20 min read</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- No results -->
+      <p id="no-results" class="hidden mt-8 text-sm text-zinc-400 dark:text-zinc-500">No articles match this filter.</p>
+
+      <!-- Follow -->
+      <div class="mt-12">
         <p class="text-sm text-zinc-400 dark:text-zinc-500">Follow me on
           <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" class="underline transition hover:text-zinc-900 dark:hover:text-white">GitHub</a> or
           <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" class="underline transition hover:text-zinc-900 dark:hover:text-white">LinkedIn</a>
-          to get notified when the first post drops.
+          to get notified when new articles drop.
         </p>
       </div>
     </section>
@@ -112,7 +228,7 @@
     <div class="mx-auto max-w-5xl">
       <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
         <div class="flex flex-wrap items-center justify-center gap-6">
-          <a href="/#projects" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Projects</a>
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
           <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
           <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
           <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
@@ -138,8 +254,13 @@
           </a>
         </div>
       </div>
-      <div class="mt-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+        </a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
+        </p>
       </div>
     </div>
   </footer>
@@ -158,6 +279,29 @@
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
+    }
+
+    function filterByTag(tag) {
+      var cards = document.querySelectorAll('.article-card');
+      var buttons = document.querySelectorAll('.tag-btn');
+      var visible = 0;
+
+      var inactiveLight = 'border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400';
+      var activeLight = 'border-zinc-300 text-zinc-900 bg-zinc-900 !text-white dark:border-zinc-600 dark:bg-white dark:!text-black';
+
+      buttons.forEach(function(btn) {
+        btn.className = 'tag-btn rounded-full border px-3 py-1 text-xs font-medium transition hover:border-zinc-400 hover:text-zinc-900 dark:hover:border-zinc-500 dark:hover:text-white ' +
+          (btn.getAttribute('data-tag') === tag ? activeLight : inactiveLight);
+      });
+
+      cards.forEach(function(card) {
+        var tags = card.getAttribute('data-tags').split(',');
+        var show = tag === 'all' || tags.indexOf(tag) !== -1;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      document.getElementById('no-results').classList.toggle('hidden', visible > 0);
     }
   </script>
 </body>

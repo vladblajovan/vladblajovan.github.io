@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="alternate icon" href="/favicon.jpeg" type="image/jpeg"/>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
+  <title>Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store - Vlad Blajovan</title>
+  <meta name="description" content="A comprehensive guide to Server-Driven UI architecture for mobile apps: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, and migration strategies." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] } } },
+    }
+  </script>
+  <style>
+    @keyframes fade-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fade-in 0.6s ease both; }
+    @media (prefers-reduced-motion: reduce) { .fade-in { animation: none; opacity: 1; } }
+    .article-body h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem; line-height: 1.3; scroll-margin-top: 7rem; }
+    html { scroll-behavior: smooth; }
+    .article-body h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; line-height: 1.4; }
+    .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
+    .article-body ul, .article-body ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    .article-body li { margin-bottom: 0.5rem; line-height: 1.7; }
+    .article-body blockquote { border-left: 3px solid; padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 0.5rem 0.5rem 0; }
+    .article-body code { font-size: 0.875em; padding: 0.15em 0.4em; border-radius: 0.25rem; }
+    .article-body pre code { padding: 0; }
+    .article-body hr { margin: 2.5rem 0; border: none; border-top: 1px solid; }
+    .article-body strong { font-weight: 600; }
+    .toc-link.active { color: #18181b; border-left-color: #18181b; font-weight: 500; }
+    .dark .toc-link.active { color: #ffffff; border-left-color: #ffffff; }
+    #toc::-webkit-scrollbar { width: 3px; }
+    #toc::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    .dark #toc::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); }
+  </script>
+</head>
+<body class="bg-white text-zinc-900 antialiased dark:bg-black dark:text-white">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <a href="/" class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">Hi.</a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <button onclick="toggleTheme()" aria-label="Toggle theme" class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
+          <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+          <svg class="h-4 w-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+        </button>
+      </div>
+      <div class="flex md:hidden items-center gap-2">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+          <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
+      <div class="flex flex-col px-6 py-4 space-y-4">
+        <a href="/" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Home</a>
+        <a href="/#apps" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="/#about" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="/#contact" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-7xl px-6 pt-32 pb-24">
+    <div class="fade-in">
+      <a href="/articles.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-8">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Back to Articles
+      </a>
+      <div class="relative lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <aside class="hidden lg:block">
+          <nav id="toc" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">Contents</h4>
+            <ul class="space-y-2 text-sm border-l border-zinc-200 dark:border-zinc-800">
+              <li><a href="#core-architecture" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="core-architecture">Core Architecture</a></li>
+              <li><a href="#openapi-schema" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="openapi-schema">OpenAPI Schema</a></li>
+              <li><a href="#design-system" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="design-system">Design System</a></li>
+              <li><a href="#ios-implementation" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="ios-implementation">iOS</a></li>
+              <li><a href="#android-implementation" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="android-implementation">Android</a></li>
+              <li><a href="#flutter-implementation" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="flutter-implementation">Flutter</a></li>
+              <li><a href="#react-native-implementation" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="react-native-implementation">React Native</a></li>
+              <li><a href="#versioning" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="versioning">Versioning</a></li>
+              <li><a href="#caching" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="caching">Caching &amp; Offline</a></li>
+              <li><a href="#actions" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="actions">Actions &amp; Events</a></li>
+              <li><a href="#ab-testing" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="ab-testing">A/B Testing</a></li>
+              <li><a href="#accessibility" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="accessibility">Accessibility</a></li>
+              <li><a href="#analytics" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="analytics">Analytics</a></li>
+              <li><a href="#forms" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="forms">Forms</a></li>
+              <li><a href="#error-handling" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="error-handling">Error Handling</a></li>
+              <li><a href="#security" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="security">Security</a></li>
+              <li><a href="#testing" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="testing">Testing</a></li>
+              <li><a href="#performance" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="performance">Performance</a></li>
+              <li><a href="#migration" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="migration">Migration</a></li>
+              <li><a href="#when-not-sdui" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="when-not-sdui">When Not to Use</a></li>
+              <li><a href="#bigger-picture" class="toc-link block pl-4 -ml-px border-l border-transparent py-0.5 text-zinc-500 transition hover:text-zinc-900 hover:border-zinc-400 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-500" data-target="bigger-picture">Bigger Picture</a></li>
+            </ul>
+          </nav>
+        </aside>
+        <div class="max-w-3xl">
+          <header class="mb-12">
+            <h1 class="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4">Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+              <span>Vlad Blajovan</span>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <time datetime="2026-03-08">March 8, 2026</time>
+              <span class="text-zinc-300 dark:text-zinc-700">&middot;</span>
+              <span>~30 min read</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Server-Driven UI</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Architecture</span>
+              <span class="inline-block rounded-full bg-zinc-100 px-3 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile Development</span>
+            </div>
+          </header>
+          <article class="article-body text-zinc-700 dark:text-zinc-300">
+
+            <p>Every mobile developer has lived this moment: a critical UI change — a banner for a flash sale, a redesigned onboarding flow, a legally required disclosure — is ready on Monday. The App Store review takes three days. The change ships Thursday. The sale ended Wednesday.</p>
+
+            <p>Server-Driven UI (SDUI) eliminates this bottleneck by moving the authority over <em>what the screen looks like</em> from the compiled client binary to a backend service. The server sends a structured description of the UI — not raw HTML or a web view, but a schema that maps to native components — and the client renders it using its own platform-native toolkit. The app becomes a rendering engine for a component vocabulary defined by your design system, and the server becomes the author of every screen.</p>
+
+            <p>This is not a new idea. Airbnb, Netflix, DoorDash, Lyft, Shopify, and dozens of other companies at scale have built SDUI systems over the past decade. What's new is the maturation of the tooling, the emergence of OpenAPI as a viable schema standard for defining component contracts, and the growing ecosystem of libraries across iOS, Android, React Native, and Flutter that make SDUI practical for teams that aren't staffed like Netflix.</p>
+
+            <p>This article covers the full landscape: the architecture and its tradeoffs, using OpenAPI to define your component schema, building a design system where every schema component has a platform-specific graphical equivalent, implementation across native and cross-platform frameworks, and the constellation of concerns — versioning, caching, offline support, accessibility, testing, analytics, security — that separate a prototype from a production system.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="core-architecture" class="text-zinc-900 dark:text-white">The Core Architecture</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">What the Server Sends</h3>
+
+            <p>In a traditional mobile app, the server sends <em>data</em> — a list of products, a user profile, a transaction history — and the client decides how to display it. In SDUI, the server sends <em>UI descriptions</em>: structured documents that specify which components to render, in what order, with what content, configured with what properties.</p>
+
+            <p>A simple example. Instead of returning:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>{
+  "user": { "name": "Vlad", "avatar_url": "...", "plan": "pro" }
+}</code></pre>
+
+            <p>The server returns:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>{
+  "screen": {
+    "title": "Profile",
+    "sections": [
+      {
+        "type": "header_card",
+        "properties": {
+          "title": "Vlad",
+          "subtitle": "Pro Plan",
+          "image_url": "...",
+          "badge": { "type": "badge", "label": "PRO", "color": "accent" }
+        }
+      },
+      {
+        "type": "action_list",
+        "items": [
+          { "type": "action_item", "label": "Edit Profile", "icon": "pencil", "action": { "type": "navigate", "destination": "/profile/edit" } },
+          { "type": "action_item", "label": "Settings", "icon": "gear", "action": { "type": "navigate", "destination": "/settings" } }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+            <p>The client doesn't know what a "profile screen" is. It knows what a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">header_card</code> is, what an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">action_list</code> is, what a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">badge</code> is. It has native implementations of each. The server composes them.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">What the Client Does</h3>
+
+            <p>The client maintains a <em>component registry</em> — a mapping from <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> strings to native view implementations. When it receives a UI description, it walks the tree, looks up each <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> in the registry, and instantiates the corresponding native view with the provided properties.</p>
+
+            <p>On iOS, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">header_card</code> maps to a SwiftUI view or UIKit cell. On Android, it maps to a Composable or a custom View. In Flutter, it maps to a Widget. In React Native, it maps to a component. The rendering is fully native — no web views, no compromises on platform conventions — but the <em>composition</em> is server-controlled.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">The Spectrum of Server Control</h3>
+
+            <p>SDUI isn't binary. It exists on a spectrum:</p>
+
+            <p><strong>Layout-level SDUI</strong> is the most common approach. The server controls which components appear and in what order, but each component is a self-contained native implementation with its own internal layout. The server says "show a product carousel here" but doesn't specify padding, font sizes, or alignment within the carousel. This is what most production systems (Airbnb, Shopify, DoorDash) use.</p>
+
+            <p><strong>Property-level SDUI</strong> gives the server control over component configuration: colors, sizes, text styles, spacing, visibility of sub-elements. The server can say "show a product card with large title, no subtitle, and a blue CTA button." This is more flexible but requires more careful schema design.</p>
+
+            <p><strong>Pixel-level SDUI</strong> attempts to have the server specify exact layout coordinates, sizes, and styles. This is almost never a good idea in mobile — it breaks across screen sizes, accessibility settings, and platform conventions. Avoid it.</p>
+
+            <p>The sweet spot for most teams is layout-level SDUI with selective property-level control for components that genuinely need server-side customization.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="openapi-schema" class="text-zinc-900 dark:text-white">Defining the Schema With OpenAPI</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Why OpenAPI</h3>
+
+            <p>Your SDUI schema is the contract between backend and frontend. It needs to be precisely defined, versioned, machine-readable, and usable for code generation. OpenAPI 3.1 checks every box.</p>
+
+            <p>OpenAPI is not just for REST endpoints. Its <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">components/schemas</code> section provides a rich schema language (based on JSON Schema) for defining the structure of your UI components. The same spec that documents your API endpoints also defines the shape of every UI component your server can send and your clients can render.</p>
+
+            <p>This has profound practical benefits. You can generate TypeScript types for your backend, Swift Codable structs for iOS, Kotlin data classes for Android, Dart classes for Flutter, and TypeScript interfaces for React Native — all from a single source of truth. When the schema changes, code generation catches mismatches at compile time, not at runtime.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Structuring the Component Schema</h3>
+
+            <p>Define each UI component as a schema in your OpenAPI spec. Use discriminated unions (via <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">oneOf</code> with a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> discriminator) to represent the component hierarchy:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>components:
+  schemas:
+    UIComponent:
+      oneOf:
+        - $ref: '#/components/schemas/HeaderCard'
+        - $ref: '#/components/schemas/ActionList'
+        - $ref: '#/components/schemas/ProductCarousel'
+        - $ref: '#/components/schemas/Banner'
+        - $ref: '#/components/schemas/SectionDivider'
+      discriminator:
+        propertyName: type
+        mapping:
+          header_card: '#/components/schemas/HeaderCard'
+          action_list: '#/components/schemas/ActionList'
+          product_carousel: '#/components/schemas/ProductCarousel'
+          banner: '#/components/schemas/Banner'
+          section_divider: '#/components/schemas/SectionDivider'
+
+    HeaderCard:
+      type: object
+      required: [type, properties]
+      properties:
+        type:
+          type: string
+          enum: [header_card]
+        properties:
+          type: object
+          required: [title]
+          properties:
+            title:
+              type: string
+            subtitle:
+              type: string
+            image_url:
+              type: string
+              format: uri
+            badge:
+              $ref: '#/components/schemas/Badge'
+
+    Badge:
+      type: object
+      required: [type, label]
+      properties:
+        type:
+          type: string
+          enum: [badge]
+        label:
+          type: string
+        color:
+          $ref: '#/components/schemas/SemanticColor'
+
+    SemanticColor:
+      type: string
+      enum: [primary, secondary, accent, success, warning, error, surface]</code></pre>
+
+            <h3 class="text-zinc-900 dark:text-white">Screen and Section Structure</h3>
+
+            <p>Define the top-level structure that wraps your components:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>    Screen:
+      type: object
+      required: [id, sections]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+        navigation:
+          $ref: '#/components/schemas/NavigationConfig'
+        pull_to_refresh:
+          type: boolean
+          default: false
+
+    Section:
+      type: object
+      required: [id, components]
+      properties:
+        id:
+          type: string
+        header:
+          type: string
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/UIComponent'
+        layout:
+          $ref: '#/components/schemas/SectionLayout'
+
+    SectionLayout:
+      type: string
+      enum: [vertical_list, horizontal_scroll, grid_2col, grid_3col]</code></pre>
+
+            <h3 class="text-zinc-900 dark:text-white">Actions and Navigation</h3>
+
+            <p>UI components need to do things — navigate, open URLs, trigger API calls, present sheets. Define an action schema:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>    UIAction:
+      oneOf:
+        - $ref: '#/components/schemas/NavigateAction'
+        - $ref: '#/components/schemas/OpenURLAction'
+        - $ref: '#/components/schemas/APICallAction'
+        - $ref: '#/components/schemas/PresentSheetAction'
+        - $ref: '#/components/schemas/DismissAction'
+      discriminator:
+        propertyName: type
+
+    NavigateAction:
+      type: object
+      required: [type, destination]
+      properties:
+        type:
+          type: string
+          enum: [navigate]
+        destination:
+          type: string
+        transition:
+          type: string
+          enum: [push, modal, replace]
+          default: push
+
+    APICallAction:
+      type: object
+      required: [type, endpoint, method]
+      properties:
+        type:
+          type: string
+          enum: [api_call]
+        endpoint:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE]
+        body:
+          type: object
+        on_success:
+          $ref: '#/components/schemas/UIAction'
+        on_error:
+          $ref: '#/components/schemas/UIAction'</code></pre>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="design-system" class="text-zinc-900 dark:text-white">The Design System: Every Schema Needs a Graphical Equivalent</h2>
+
+            <p>This is the principle that makes or breaks an SDUI system: <strong>every component type defined in your schema must have a corresponding native implementation on every supported platform.</strong> If <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">product_card</code> exists in the schema, it must render as a native SwiftUI view on iOS, a Composable on Android, a Widget in Flutter, and a component in React Native. No exceptions. No fallback-to-web-view. No "we'll add that one later."</p>
+
+            <h3 class="text-zinc-900 dark:text-white">The Component Catalog</h3>
+
+            <p>Your design system is the bridge between the schema (abstract) and the UI (concrete). It consists of a component catalog — a living document (or better, a living app) that shows every component in the schema rendered on every platform.</p>
+
+            <p>For each component, the catalog specifies its schema definition (the OpenAPI schema that describes its data shape), its visual design (Figma, Sketch, or in-tool screenshots showing the intended appearance), its iOS implementation (SwiftUI or UIKit), its Android implementation (Jetpack Compose or XML Views), its Flutter implementation (Widget), its React Native implementation (component), its accessibility semantics (labels, roles, traits per platform), and its behavioral specification (what happens on tap, on long press, on swipe).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Platform-Specific Rendering</h3>
+
+            <p>The same schema should produce platform-appropriate UI on each target. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">header_card</code> on iOS should feel like an iOS component — using San Francisco font, respecting Dynamic Type, supporting Reduce Motion, using system-standard spacing. The same <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">header_card</code> on Android should feel like a Material component — using Roboto, respecting system font scale, using Material elevation and shape system.</p>
+
+            <p>This means your component implementations are not identical across platforms. They're <em>semantically</em> identical (same data, same behavior) but <em>visually</em> adapted to each platform's design language. The OpenAPI schema defines the data contract. The design system defines the visual contract per platform. The client implementation satisfies both.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Semantic Tokens, Not Raw Values</h3>
+
+            <p>Your schema should use semantic values, not raw ones. Don't send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"color": "#2196F3"</code>. Send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"color": "primary"</code>. Don't send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"font_size": 17</code>. Send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"text_style": "body"</code>. Don't send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"padding": 16</code>. Send <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">"spacing": "standard"</code>.</p>
+
+            <p>The client resolves these tokens against its own platform's design system: <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">primary</code> maps to <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Color.accentColor</code> on iOS, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.colorScheme.primary</code> on Android, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Theme.of(context).colorScheme.primary</code> in Flutter. <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">body</code> maps to <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Font.body</code> in SwiftUI, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.typography.bodyLarge</code> in Compose, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Theme.of(context).textTheme.bodyLarge</code> in Flutter.</p>
+
+            <p>This token-based approach means the server controls <em>what</em> to show without dictating <em>how</em> it looks on each platform. It also means your app automatically adapts to dark mode, high contrast mode, accessibility font sizes, and platform theme changes without any server-side awareness.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Component Lifecycle: Adding New Components</h3>
+
+            <p>When you need a new component type, the process is:</p>
+
+            <ol class="list-decimal">
+              <li>Design the component in your design system tool (Figma, Sketch).</li>
+              <li>Define the schema in OpenAPI — the data shape, properties, and actions.</li>
+              <li>Implement the component natively on each supported platform.</li>
+              <li>Ship a client update that includes the new component renderer.</li>
+              <li>The server can now include the new component in responses.</li>
+            </ol>
+
+            <p>Steps 1–4 happen once per component. Step 5 happens forever — the server can compose the new component into any screen without further client changes.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Handling Unknown Components</h3>
+
+            <p>What happens when the server sends a component type that an older client doesn't recognize? This is the most critical versioning question in SDUI. Your options are to ignore the unknown component (skip it silently and render the rest of the screen), render a fallback (a generic placeholder or a "please update your app" message), or refuse to render (show an error screen requiring an app update).</p>
+
+            <p>The first option is almost always correct for non-critical components. The third is appropriate only for components that are essential to the screen's function. Define a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">fallback</code> property in your schema that the server can use to specify what older clients should do:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>    FallbackBehavior:
+      type: string
+      enum: [skip, placeholder, update_required]</code></pre>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="ios-implementation" class="text-zinc-900 dark:text-white">Implementation: Native iOS</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">SwiftUI Approach</h3>
+
+            <p>On iOS with SwiftUI, the component registry is a function that maps component types to views:</p>
+
+            <p>The core pattern is a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ComponentRenderer</code> view that accepts a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code> (your decoded schema model) and switches on its <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> to return the appropriate SwiftUI view. Each concrete component view receives strongly-typed properties generated from your OpenAPI schema (using tools like swift-openapi-generator or CreateAPI).</p>
+
+            <p>SwiftUI's declarative nature is a natural fit for SDUI. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Section</code> becomes a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">LazyVStack</code> or <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ScrollView</code>, a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">SectionLayout.horizontal_scroll</code> becomes a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ScrollView(.horizontal)</code>, and each component renders as a native SwiftUI view within that container.</p>
+
+            <p>Register for Dynamic Type, accessibility traits, and VoiceOver labels within each component implementation. The server's semantic tokens resolve against <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">@Environment(\.colorScheme)</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">@Environment(\.sizeCategory)</code>, and your app's design token system.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">UIKit Approach</h3>
+
+            <p>For teams still on UIKit (or using it for specific screens that need fine-grained control), the component registry maps to <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIView</code> subclasses or <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UICollectionViewCell</code> subclasses. A diffable data source backed by <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UICollectionView</code> with compositional layout provides the scrolling container, with each section configuring its layout (list, horizontal scroll, grid) from the schema's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">SectionLayout</code> enum.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="android-implementation" class="text-zinc-900 dark:text-white">Implementation: Native Android</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Jetpack Compose Approach</h3>
+
+            <p>Compose is arguably the most natural fit for SDUI in the native ecosystem. Composable functions map directly to component types, and Compose's reactive model means that updating the server response automatically triggers recomposition.</p>
+
+            <p>The registry is a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">@Composable</code> function that takes a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">UIComponent</code> sealed class (generated from OpenAPI using openapi-generator for Kotlin) and renders the matching composable. Sections become <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">LazyColumn</code> items, horizontal scrolls become <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">LazyRow</code>, and the entire screen is a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Scaffold</code> with pull-to-refresh, navigation, and error states managed by a ViewModel that fetches the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Screen</code> schema from the API.</p>
+
+            <p>Material Design tokens map directly to <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.colorScheme</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.typography</code>, and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">MaterialTheme.shapes</code>. Semantic color values from the schema resolve against the current theme, automatically supporting dark mode and dynamic color (Material You).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">XML Views Approach</h3>
+
+            <p>For legacy codebases, the registry maps component types to <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">RecyclerView.ViewHolder</code> subclasses. A <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ConcatAdapter</code> composes multiple adapters (one per section), and each section's layout manager corresponds to the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">SectionLayout</code> enum. This approach works but is significantly more boilerplate-heavy than Compose.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="flutter-implementation" class="text-zinc-900 dark:text-white">Implementation: Flutter</h2>
+
+            <p>Flutter's widget-based architecture maps cleanly to SDUI. The component registry is a function that takes a decoded JSON map and returns a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Widget</code>. Libraries like Flutter Mirai and Duit Flutter provide production-ready implementations of this pattern.</p>
+
+            <p>The key advantage in Flutter is that you implement the component registry once and it runs on iOS, Android, web, and desktop. There's no per-platform work for the rendering layer. The key disadvantage is that Flutter widgets don't automatically match platform conventions — a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">HeaderCard</code> widget looks the same on iOS and Android unless you explicitly adapt it with platform checks.</p>
+
+            <p>For teams that want platform-adaptive rendering (iOS components that feel like iOS, Android components that feel like Android), use the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">platform</code> property from the schema or check <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Theme.of(context).platform</code> to select between Cupertino and Material variants of each component.</p>
+
+            <p>The deserialization layer maps JSON to Dart classes generated from your OpenAPI schema using openapi-generator-dart or swagger-dart-code-generator. Each <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> string maps to a widget builder in a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Map&lt;String, Widget Function(Map&lt;String, dynamic&gt;)&gt;</code> registry.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="react-native-implementation" class="text-zinc-900 dark:text-white">Implementation: React Native</h2>
+
+            <p>React Native's component model aligns well with SDUI. The registry maps type strings to React components. The schema's JSON response is parsed (TypeScript interfaces generated from OpenAPI via openapi-typescript or orval), and a renderer component walks the tree, looking up each type in the registry and rendering the corresponding React Native component.</p>
+
+            <p>The advantage of React Native is that you can update the component registry itself via CodePush or similar OTA update mechanisms, meaning new component types can be deployed without a full app store review. This compounds the SDUI advantage — not only can the server compose existing components freely, but you can also deploy entirely new components over the air.</p>
+
+            <p>The disadvantage is performance overhead for deeply nested component trees. Profile your renderer with React DevTools and use <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">React.memo</code> to prevent unnecessary re-renders when the schema response changes partially.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="versioning" class="text-zinc-900 dark:text-white">Versioning: The Problem That Defines SDUI Systems</h2>
+
+            <p>Versioning is where SDUI systems succeed or fail. The server must know what the client can render. The client must handle responses that include components it doesn't recognize. And the whole system must evolve without breaking older clients.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Client Capabilities</h3>
+
+            <p>Every API request from the client should include a capability header or parameter that declares which component types (and which versions of those types) the client supports. This can be a simple version number (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">X-Schema-Version: 12</code>), a feature flag set (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">X-Capabilities: header_card,product_carousel,video_player</code>), or the app version itself (from which the server infers supported components via a mapping table).</p>
+
+            <p>The server uses this information to tailor its responses — sending a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">video_player</code> component only to clients that support it, and falling back to an <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">image_card</code> for older clients. This is the same pattern used by content negotiation in HTTP, applied to UI components.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Schema Versioning in OpenAPI</h3>
+
+            <p>Version your schema in the OpenAPI spec's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">info.version</code> field. When you add a new component type, increment the minor version. When you change the shape of an existing component in a breaking way (removing a required field, changing a type), increment the major version. Treat it like semver.</p>
+
+            <p>For non-breaking changes (adding optional fields to existing components), the server can start including them immediately. Old clients that don't recognize the new fields will ignore them (assuming your deserialization is lenient, which it should be).</p>
+
+            <p>For breaking changes, maintain parallel schema versions and use the client capability header to serve the appropriate version. Breaking changes should be rare — prefer evolution (adding optional fields) over revolution (restructuring components).</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="caching" class="text-zinc-900 dark:text-white">Caching and Offline Support</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Caching UI Responses</h3>
+
+            <p>SDUI responses are highly cacheable. Use standard HTTP caching headers (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Cache-Control</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">ETag</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Last-Modified</code>) on your screen endpoints. The client caches the entire UI description and renders it instantly on subsequent visits, making a conditional request (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">If-None-Match</code>) to check for updates.</p>
+
+            <p>For screens that change rarely (settings, about, FAQ), cache aggressively with long TTLs. For screens that change frequently (home feed, promotions), use short TTLs with stale-while-revalidate to show cached content immediately while fetching updates in the background.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Offline Rendering</h3>
+
+            <p>Because SDUI responses are self-contained descriptions, they're ideal for offline rendering. Cache the last successful response for each screen, and when the network is unavailable, render from cache. The user sees the last-known-good UI rather than an error screen.</p>
+
+            <p>For screens with dynamic data (product prices, inventory counts), separate the UI structure (cacheable for days) from the volatile data (cacheable for minutes). The UI schema references data endpoints, and the client fetches fresh data to inject into the cached structure.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Prefetching</h3>
+
+            <p>Prefetch UI schemas for screens the user is likely to visit next. If the user is on the home screen and there's a tab bar with four tabs, prefetch the schemas for the other three tabs while the user is reading the home screen. Navigation becomes instant because the UI description is already local.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="actions" class="text-zinc-900 dark:text-white">Actions, Events, and Client-Side Logic</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">The Action System</h3>
+
+            <p>Actions are the behaviors attached to UI components: what happens when a user taps a button, submits a form, swipes a card, or pulls to refresh. Your action schema (defined in OpenAPI) should cover navigation (push, present modally, deep link), API calls (with success/failure handling and optimistic updates), URL opening (in-app browser or external), sheet/dialog presentation, analytics event tracking, local state changes (add to cart, toggle favorite), and form submission with validation.</p>
+
+            <p>Complex actions compose: an "Add to Cart" button might trigger an API call, show a success toast on completion, update a cart badge count, and fire an analytics event — all defined in the server response as a chain of actions.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Where Logic Lives</h3>
+
+            <p>Not everything should be server-driven. Client-side logic should handle animation, gesture recognition, scroll physics, form validation (for immediate feedback), local storage operations, camera/biometric/sensor access, and complex stateful interactions (drag and drop, multi-step wizards with local state).</p>
+
+            <p>Server-side logic should handle screen composition, feature flags and A/B testing, content personalization, business rule enforcement (what actions are available given the user's state), and navigation graph configuration.</p>
+
+            <p>The boundary is: the server controls <em>what</em> appears and <em>what</em> can be done. The client controls <em>how</em> it appears and <em>how</em> interactions feel.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="ab-testing" class="text-zinc-900 dark:text-white">A/B Testing and Personalization</h2>
+
+            <p>SDUI makes A/B testing trivially easy. The server already controls what the client displays — to run an A/B test, simply serve different screen configurations to different user segments. No client changes. No app store review. No SDK integration.</p>
+
+            <p>Test a new onboarding flow by sending a different sequence of screens to the test group. Test a new product card layout by swapping the component type. Test a new call-to-action placement by reordering sections. All server-side. All immediate. All measurable through your existing analytics pipeline.</p>
+
+            <p>Personalization follows the same mechanism. The server knows the user's segment, history, preferences, and context. It composes a screen tailored to that specific user — surfacing relevant content, hiding irrelevant sections, adjusting the prominence of different components — all without the client having any personalization logic.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="accessibility" class="text-zinc-900 dark:text-white">Accessibility</h2>
+
+            <p>Every component in your registry must be accessible. This is non-negotiable and requires platform-specific work.</p>
+
+            <p>The schema should include accessibility-relevant properties: <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">accessibility_label</code> (the text that screen readers announce), <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">accessibility_hint</code> (the action description), <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">accessibility_role</code> (button, heading, image, link), and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">is_decorative</code> (whether the element should be hidden from assistive technology).</p>
+
+            <p>Each platform implementation maps these properties to native accessibility APIs: <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">.accessibilityLabel()</code> and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">.accessibilityAddTraits()</code> in SwiftUI, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Modifier.semantics { contentDescription = ... }</code> in Compose, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Semantics(label: ...)</code> in Flutter, and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">accessibilityLabel</code> in React Native.</p>
+
+            <p>Dynamic Type (iOS) and font scaling (Android) must work for every component. The schema's semantic text styles (<code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">body</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">headline</code>, <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">caption</code>) map to scalable typography systems on each platform.</p>
+
+            <p>The server should avoid sending accessibility-hostile configurations — text over images without sufficient contrast, interactive elements too small to tap, content that relies solely on color to convey meaning. Validate these constraints server-side before sending the response, or use a linting step in your CI pipeline that checks schema responses against WCAG criteria.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="analytics" class="text-zinc-900 dark:text-white">Analytics and Event Tracking</h2>
+
+            <p>SDUI centralizes not just rendering but also analytics instrumentation. The server can embed tracking metadata in every component:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>    TrackingContext:
+      type: object
+      properties:
+        impression_event:
+          type: string
+        tap_event:
+          type: string
+        position:
+          type: integer
+        experiment_id:
+          type: string
+        variant_id:
+          type: string</code></pre>
+
+            <p>When the client renders a component, it fires the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">impression_event</code>. When the user interacts with it, it fires the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">tap_event</code>. Position tracking enables scroll-depth analytics. Experiment metadata connects interaction data to A/B test results.</p>
+
+            <p>This eliminates one of the most common analytics failures in mobile apps: events that are defined in a tracking plan but never implemented in client code. If the analytics metadata is in the schema, the client's generic rendering engine fires it automatically.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="forms" class="text-zinc-900 dark:text-white">Forms and User Input</h2>
+
+            <p>Server-driven forms require the schema to describe field types, validation rules, and submission behavior:</p>
+
+<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 overflow-x-auto text-sm mb-5"><code>    FormField:
+      type: object
+      required: [type, field_id, label]
+      properties:
+        type:
+          type: string
+          enum: [text_input, email_input, password_input, number_input,
+                 date_picker, dropdown, checkbox, radio_group, toggle]
+        field_id:
+          type: string
+        label:
+          type: string
+        placeholder:
+          type: string
+        required:
+          type: boolean
+        validation:
+          $ref: '#/components/schemas/ValidationRule'
+        initial_value:
+          type: string
+
+    ValidationRule:
+      type: object
+      properties:
+        min_length:
+          type: integer
+        max_length:
+          type: integer
+        pattern:
+          type: string
+          description: "Regex pattern for validation"
+        error_message:
+          type: string</code></pre>
+
+            <p>Client-side validation provides immediate feedback (the regex runs locally), while server-side validation on form submission enforces business rules the client can't verify.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="error-handling" class="text-zinc-900 dark:text-white">Error Handling</h2>
+
+            <p>Every SDUI response should include error handling at multiple levels.</p>
+
+            <p><strong>Screen-level errors:</strong> The API returns an HTTP error. The client shows a generic error screen with a retry button. Include an error-specific UI in the schema itself — the server can send a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Screen</code> with an error component that has a customized message, illustration, and action (retry, contact support, go home).</p>
+
+            <p><strong>Section-level errors:</strong> One section's data fails to load. The client hides that section and renders the rest. The schema's <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Section</code> can include a <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">fallback</code> property specifying what to show if the section's data source fails.</p>
+
+            <p><strong>Component-level errors:</strong> An image fails to load, a price is missing. Each component handles its own degraded state. The schema can define <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">required</code> properties (without which the component is skipped) and <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">optional</code> properties (where the component gracefully degrades).</p>
+
+            <p><strong>Unknown component errors:</strong> Already covered in the versioning section. Skip, placeholder, or update-required, based on the <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">fallback</code> behavior in the schema.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="security" class="text-zinc-900 dark:text-white">Security Considerations</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Schema Validation</h3>
+
+            <p>The client must validate server responses before rendering. Don't blindly trust the schema. Validate that <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">type</code> values match known components, that URLs are well-formed and use HTTPS, that action destinations are within allowed navigation paths, and that no component exceeds resource limits (image sizes, text lengths, nesting depth).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Content Injection</h3>
+
+            <p>Since the server controls what the client displays, a compromised server (or a man-in-the-middle attack) could inject malicious content: phishing screens, misleading information, or actions that trigger unintended API calls. Mitigate with HTTPS (mandatory), certificate pinning (for high-security apps), response signing (the server signs the schema, the client verifies), and input sanitization (never render raw HTML from the schema).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Deep Link Security</h3>
+
+            <p>Actions that navigate to deep links or open URLs must be validated against an allowlist. The client should refuse to navigate to arbitrary URLs or deep links not defined in its navigation graph.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="testing" class="text-zinc-900 dark:text-white">Testing</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Schema Contract Testing</h3>
+
+            <p>Use the OpenAPI spec as the source of truth for contract tests. Generate mock responses from the spec (tools like Prism can generate realistic mock data from OpenAPI schemas) and verify that your client can deserialize and render every possible response.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Snapshot Testing</h3>
+
+            <p>For each component, generate a snapshot test that renders the component with representative data and compares it against a baseline. Run snapshots on every platform — the same schema input should produce visually correct output on iOS, Android, Flutter, and React Native independently.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Integration Testing</h3>
+
+            <p>Test the full pipeline: server generates a response, client fetches it, client renders it, user interacts with it. Use your SDUI schema's action system to verify that navigation, API calls, and state changes work end to end.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Visual Regression Testing</h3>
+
+            <p>Because the server controls layout composition, a server-side change can inadvertently break the visual appearance of a screen. Automated visual regression testing (capturing screenshots and comparing against baselines) catches layout regressions that unit tests and snapshot tests can't detect.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Accessibility Testing</h3>
+
+            <p>Every component, on every platform, must pass accessibility validation: labels present, touch targets meeting minimums, contrast ratios sufficient, reading order logical. Automate these checks in your test suite.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="performance" class="text-zinc-900 dark:text-white">Performance Considerations</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Payload Size</h3>
+
+            <p>SDUI responses are larger than pure data responses because they include structural information. Mitigate with response compression (gzip/brotli), pagination (load screens in sections, with lazy loading for below-the-fold content), and component deduplication (reference a component definition once and reuse it via IDs).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Rendering Performance</h3>
+
+            <p>Deeply nested component trees can cause rendering issues, particularly on older devices. Profile your component renderer. Use lazy rendering (don't inflate off-screen components), recycling (reuse component views in scrolling lists), and pagination (limit the number of components per API response).</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Image Optimization</h3>
+
+            <p>The server knows the device's screen dimensions (from the request headers). Use this to serve appropriately sized images — don't send 4K hero images to a device with a 375pt-wide screen. Include image sizing parameters in your schema and generate CDN URLs with the correct dimensions.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="migration" class="text-zinc-900 dark:text-white">Migration Strategy: From Traditional to Server-Driven</h2>
+
+            <h3 class="text-zinc-900 dark:text-white">Start Small</h3>
+
+            <p>Don't rewrite your entire app. Pick one screen that changes frequently and would benefit from server-side control — the home feed, a promotions page, a settings screen. Implement SDUI for that single screen while keeping everything else traditional. Learn from the experience before expanding.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Build the Component Library First</h3>
+
+            <p>Before making any screen server-driven, build and ship the component implementations. Your app should contain native renderers for every component type in your initial schema, even if no screen uses them yet. This means the client is already capable of rendering server-driven screens before the server starts sending them.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Dual-Mode Rendering</h3>
+
+            <p>During migration, screens can operate in dual mode: the client has a traditional implementation (the current code) and a server-driven renderer (the new system). A feature flag determines which renders. This allows instant rollback if the server-driven version has issues.</p>
+
+            <h3 class="text-zinc-900 dark:text-white">Migrate Screen by Screen</h3>
+
+            <p>Once the component library is proven and the first server-driven screen is stable, expand to additional screens one at a time. Each screen migration is a self-contained project with its own timeline and rollback strategy.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="when-not-sdui" class="text-zinc-900 dark:text-white">When SDUI Is Not the Right Choice</h2>
+
+            <p>SDUI is powerful, but it's not universal. It's not a good fit for heavily interactive screens with complex local state (drawing tools, video editors, real-time games), for screens that rarely change (a static about page, a terms of service screen that updates annually), for apps with a single platform (if you only target iOS, the app store review cycle is your only bottleneck, and SDUI's cross-platform benefits don't apply), or for teams without backend engineering capacity (SDUI shifts work from client to server — you need backend engineers who understand UI composition).</p>
+
+            <p>SDUI shines for content-heavy screens that change frequently, for multi-platform apps where consistency across iOS, Android, web, and TV matters, for teams that need to A/B test and personalize aggressively, and for organizations where app store review cycles are a business bottleneck.</p>
+
+            <hr class="border-zinc-200 dark:border-zinc-800">
+
+            <h2 id="bigger-picture" class="text-zinc-900 dark:text-white">The Bigger Picture: SDUI as an Organizational Pattern</h2>
+
+            <p>SDUI is as much an organizational pattern as a technical one. It changes who is responsible for what the user sees. In a traditional app, frontend developers control the UI. In an SDUI app, backend developers (or product managers, or a content team using a visual editor backed by the schema) control screen composition.</p>
+
+            <p>This enables new workflows. A marketing team can create a promotional screen by composing existing components in a CMS that outputs your schema format — no engineering ticket required. A product manager can reorder sections on the home feed to optimize for a specific KPI — tested immediately, rolled back if it doesn't work.</p>
+
+            <p>But it also requires new discipline. The component library becomes the core product. Its design, its documentation, its accessibility, its performance — all must be maintained with the same rigor as any public API. Because that's what it is: an API between your backend (which composes screens) and your frontend (which renders them), mediated by a schema that must be precise, versioned, and trustworthy.</p>
+
+            <p>Build the schema carefully. Build the components thoroughly. Build the system incrementally. And then enjoy never waiting for an app store review to change what your users see.</p>
+
+          </article>
+
+          <div class="mt-16 rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Enjoyed this article?</h3>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Follow me for more on mobile development, accessibility, and AI-assisted workflows.</p>
+            <div class="flex justify-center gap-4">
+              <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-zinc-200 px-6 py-12 dark:border-zinc-800">
+    <div class="mx-auto max-w-5xl">
+      <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-wrap items-center justify-center gap-6">
+          <a href="/#apps" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+          <a href="/articles.html" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+          <a href="/#about" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+          <a href="/#contact" class="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
+          <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email" class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></a>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-4">
+        <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;"></a>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">&copy; 2025&ndash;<span id="year"></span> Vlad Blajovan</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    function toggleMenu() { const menu = document.getElementById('mobile-menu'); const iconMenu = document.getElementById('icon-menu'); const iconClose = document.getElementById('icon-close'); menu.classList.toggle('hidden'); iconMenu.classList.toggle('hidden'); iconClose.classList.toggle('hidden'); }
+    function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+    (function() {
+      var headings = document.querySelectorAll('.article-body h2[id]');
+      var tocLinks = document.querySelectorAll('.toc-link');
+      if (!headings.length || !tocLinks.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(link) { link.classList.remove('active'); });
+            var active = document.querySelector('.toc-link[data-target="' + entry.target.id + '"]');
+            if (active) active.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -75% 0px', threshold: 0 });
+      headings.forEach(function(h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>
