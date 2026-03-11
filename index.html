@@ -46,10 +46,26 @@
     .delay-3 { animation-delay: 0.3s; }
     .delay-4 { animation-delay: 0.4s; }
 
+    /* Mobile menu slide-down */
+    @keyframes menu-slide-down {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .menu-open { animation: menu-slide-down 0.2s ease both; }
+
+    /* Coming Soon pulse */
+    @keyframes badge-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .badge-coming-soon { animation: badge-pulse 2.5s ease-in-out infinite; }
+
     @media (prefers-reduced-motion: reduce) {
       .fade-in { animation: none; opacity: 1; }
       .animate-gradient { animation: none; }
       .animate-gradient-glow { animation: none; }
+      .menu-open { animation: none; opacity: 1; }
+      .badge-coming-soon { animation: none; }
     }
 
     @keyframes gradient-rotate {
@@ -85,10 +101,10 @@
       <span class="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white">Hi.</span>
       <!-- Desktop nav -->
       <div class="hidden md:flex items-center gap-6">
-        <a href="#apps" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
-        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
-        <a href="#about" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
-        <a href="#contact" class="text-sm font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <a href="#apps" class="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="#about" class="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="#contact" class="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
         <button onclick="toggleTheme()" aria-label="Toggle theme"
           class="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white">
           <svg class="h-4 w-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -101,7 +117,7 @@
       </div>
       <!-- Mobile: hamburger -->
       <div class="flex md:hidden items-center gap-2">
-        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white">
+        <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu" class="p-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
           <svg id="icon-menu" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
           </svg>
@@ -114,10 +130,10 @@
     <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black">
       <div class="flex flex-col px-6 py-4 space-y-4">
-        <a href="#apps" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Apps</a>
-        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Articles</a>
-        <a href="#about" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">About</a>
-        <a href="#contact" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-black dark:text-zinc-400 dark:hover:text-white">Contact</a>
+        <a href="#apps" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Apps</a>
+        <a href="/articles.html" class="text-base font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Articles</a>
+        <a href="#about" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</a>
+        <a href="#contact" onclick="toggleMenu()" class="text-base font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</a>
       </div>
     </div>
   </nav>
@@ -125,8 +141,9 @@
   <main class="mx-auto max-w-5xl px-6 pt-32 pb-24">
 
     <!-- Hero -->
-    <section class="mb-24 fade-in">
-      <p class="max-w-xl text-lg text-zinc-600 leading-relaxed dark:text-zinc-400">
+    <section class="mb-24 fade-in relative">
+      <div class="pointer-events-none absolute -top-16 -left-24 h-64 w-64 rounded-full bg-gradient-to-br from-zinc-200/40 to-transparent blur-3xl dark:from-zinc-800/30" aria-hidden="true"></div>
+      <p class="relative max-w-xl text-lg text-zinc-600 leading-relaxed dark:text-zinc-400">
         I'm Vlad, crafting software with a focus on building products that are genuinely useful, beautifully designed, and improve your life.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
@@ -163,7 +180,7 @@
         <div class="group relative rounded-2xl border border-zinc-300 bg-zinc-100 p-6 transition hover:border-zinc-400 hover:bg-zinc-200 flex flex-col dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-500 dark:hover:bg-zinc-700/80">
           <a href="https://vladblajovan.github.io/RitualistApp/" target="_blank" rel="noopener noreferrer" class="absolute inset-0 rounded-2xl" aria-label="Ritualist"></a>
           <div class="mb-4 flex items-center justify-between">
-            <img src="/brand-icon.png" alt="Ritualist" class="h-14 w-14 rounded-xl" />
+            <img src="/brand-icon.png" alt="Ritualist" class="h-14 w-14 rounded-xl" loading="lazy" />
           </div>
           <h3 class="mb-2 text-lg font-semibold">
             <span class="bg-gradient-to-r from-[#0A95C2] to-[#0556A6] bg-clip-text text-transparent">Ritualist</span>
@@ -189,8 +206,8 @@
         <!-- AppDock -->
         <div class="relative rounded-2xl border border-zinc-300 bg-zinc-100 p-6 transition hover:border-zinc-400 hover:bg-zinc-200 flex flex-col dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-500 dark:hover:bg-zinc-700/80">
           <div class="mb-4 flex items-center justify-between">
-            <img src="/appdock-icon.png" alt="AppDock" class="h-14 w-14 rounded-xl" />
-            <span class="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400">Coming Soon</span>
+            <img src="/appdock-icon.png" alt="AppDock" class="h-14 w-14 rounded-xl" loading="lazy" />
+            <span class="badge-coming-soon rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-zinc-900">Coming Soon</span>
           </div>
           <h3 class="mb-2 text-lg font-semibold">
             <span class="bg-gradient-to-r from-[#7C6FE0] to-[#4F46E5] bg-clip-text text-transparent">AppDock</span>
@@ -206,8 +223,8 @@
         <!-- StickyNotes -->
         <div class="relative rounded-2xl border border-zinc-300 bg-zinc-100 p-6 transition hover:border-zinc-400 hover:bg-zinc-200 flex flex-col dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-500 dark:hover:bg-zinc-700/80">
           <div class="mb-4 flex items-center justify-between">
-            <img src="/stickynotes-icon.png" alt="StickyNotes" class="h-14 w-14 rounded-xl" />
-            <span class="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400">Coming Soon</span>
+            <img src="/stickynotes-icon.png" alt="StickyNotes" class="h-14 w-14 rounded-xl" loading="lazy" />
+            <span class="badge-coming-soon rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-zinc-900">Coming Soon</span>
           </div>
           <h3 class="mb-2 text-lg font-semibold">
             <span class="bg-gradient-to-r from-[#FFD60A] to-[#FF9F0A] bg-clip-text text-transparent">StickyNotes</span>
@@ -229,13 +246,13 @@
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
         <a href="/articles/ai-powered-debug-menus.html"
-          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          class="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
           <div class="mb-3 flex flex-wrap gap-2">
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile</span>
           </div>
-          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower</h3>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-zinc-900 dark:text-white dark:group-hover:text-white">Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower</h3>
           <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">AI coding assistants have flipped the ROI on internal tooling. Here are 15 debug menu features you can scaffold in an afternoon.</p>
           <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <time datetime="2026-03-08">March 8, 2026</time>
@@ -245,13 +262,13 @@
         </a>
 
         <a href="/articles/ai-assisted-wcag-accessibility-compliance.html"
-          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          class="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
           <div class="mb-3 flex flex-wrap gap-2">
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Accessibility</span>
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Mobile</span>
           </div>
-          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought</h3>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-zinc-900 dark:text-white dark:group-hover:text-white">Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought</h3>
           <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">WCAG 2.2 dissected principle by principle, mapped to Apple's HIG and Google's Material Design, with AI-assisted workflows.</p>
           <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <time datetime="2026-03-08">March 8, 2026</time>
@@ -261,12 +278,12 @@
         </a>
 
         <a href="/articles/claude-code-crash-course.html"
-          class="group rounded-2xl border border-zinc-200 p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
+          class="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col">
           <div class="mb-3 flex flex-wrap gap-2">
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Developer Tools</span>
             <span class="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">AI</span>
           </div>
-          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-black dark:text-white dark:group-hover:text-white">The Claude Code Crash Course: From First Prompt to Autonomous Development Loops</h3>
+          <h3 class="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-zinc-900 dark:text-white dark:group-hover:text-white">The Claude Code Crash Course: From First Prompt to Autonomous Development Loops</h3>
           <p class="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">Everything you need to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, and the full extension ecosystem.</p>
           <div class="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <time datetime="2026-03-08">March 8, 2026</time>
@@ -334,13 +351,13 @@
         <!-- Social links -->
         <div class="flex items-center gap-4">
           <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
-            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            class="text-zinc-400 transition hover:text-[#333] dark:hover:text-white">
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
           </a>
           <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
-            class="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
+            class="text-zinc-400 transition hover:text-[#0A66C2] dark:hover:text-[#0A66C2]">
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
             </svg>
@@ -355,7 +372,7 @@
       </div>
       <div class="mt-8 flex flex-col items-center gap-4">
         <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;">
+          <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;" loading="lazy">
         </a>
         <p class="text-sm text-zinc-500 dark:text-zinc-400">
           &copy; 2025&ndash;<span id="year"></span> Vlad Blajovan
@@ -371,7 +388,14 @@
       var menu = document.getElementById('mobile-menu');
       var iconMenu = document.getElementById('icon-menu');
       var iconClose = document.getElementById('icon-close');
-      menu.classList.toggle('hidden');
+      var isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        menu.classList.add('menu-open');
+      } else {
+        menu.classList.add('hidden');
+        menu.classList.remove('menu-open');
+      }
       iconMenu.classList.toggle('hidden');
       iconClose.classList.toggle('hidden');
     }
