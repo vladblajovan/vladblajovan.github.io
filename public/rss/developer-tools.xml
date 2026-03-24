@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - Developer Tools Articles</title>
+    <description>Articles tagged "Developer Tools" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/developer-tools.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower]]></title>
+      <description><![CDATA[AI coding assistants have made it trivially cheap to build production-grade debug menus. This article walks through 15 use cases and how to build them.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-powered-debug-menus/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-powered-debug-menus/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Developer Tools</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[The Claude Code Crash Course: From First Prompt to Autonomous Development Loops]]></title>
+      <description><![CDATA[Everything a developer needs to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, Remote Control, agent teams, and multi-device orchestration.]]></description>
+      <link>https://vladblajovan.github.io/articles/claude-code-crash-course/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/claude-code-crash-course/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Developer Tools</category>
+      <category>AI</category>
+    </item>
+  </channel>
+</rss>

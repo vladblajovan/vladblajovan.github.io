@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - Career Articles</title>
+    <description>Articles tagged "Career" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/career.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[The Foundation Paradox: Why AI Making Code Easier to Write Makes Your Fundamentals More Valuable, Not Less]]></title>
+      <description><![CDATA[Why strong software engineering fundamentals -- architecture, design patterns, security, scalability -- become more valuable, not less, as AI takes over the act of writing code.]]></description>
+      <link>https://vladblajovan.github.io/articles/strong-foundations-ai-era/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/strong-foundations-ai-era/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>AI</category>
+      <category>Architecture</category>
+      <category>Career</category>
+    </item>
+  </channel>
+</rss>

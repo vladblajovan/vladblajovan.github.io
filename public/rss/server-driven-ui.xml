@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - Server-Driven UI Articles</title>
+    <description>Articles tagged "Server-Driven UI" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/server-driven-ui.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield]]></title>
+      <description><![CDATA[A technical deep dive into SDUI parser architecture: component registries, recursive rendering, the Visitor pattern, and where OpenAPI code generators break with UI schemas.]]></description>
+      <link>https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store]]></title>
+      <description><![CDATA[A comprehensive guide to Server-Driven UI architecture for mobile apps: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, and migration strategies.]]></description>
+      <link>https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+  </channel>
+</rss>
