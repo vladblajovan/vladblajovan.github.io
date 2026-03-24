@@ -1,0 +1,612 @@
+---
+title: "Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store"
+description: "A comprehensive guide to Server-Driven UI architecture for mobile apps: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, and migration strategies."
+date: "2026-03-08"
+tags: ["Server-Driven UI", "Architecture", "Mobile Development"]
+readTime: "30 min"
+---
+
+Every mobile developer has lived this moment: a critical UI change -- a banner for a flash sale, a redesigned onboarding flow, a legally required disclosure -- is ready on Monday. The App Store review takes three days. The change ships Thursday. The sale ended Wednesday.
+
+Server-Driven UI (SDUI) eliminates this bottleneck by moving the authority over *what the screen looks like* from the compiled client binary to a backend service. The server sends a structured description of the UI -- not raw HTML or a web view, but a schema that maps to native components -- and the client renders it using its own platform-native toolkit. The app becomes a rendering engine for a component vocabulary defined by your design system, and the server becomes the author of every screen.
+
+This is not a new idea. Airbnb, Netflix, DoorDash, Lyft, Shopify, and dozens of other companies at scale have built SDUI systems over the past decade. What's new is the maturation of the tooling, the emergence of OpenAPI as a viable schema standard for defining component contracts, and the growing ecosystem of libraries across iOS, Android, React Native, and Flutter that make SDUI practical for teams that aren't staffed like Netflix.
+
+This article covers the full landscape: the architecture and its tradeoffs, using OpenAPI to define your component schema, building a design system where every schema component has a platform-specific graphical equivalent, implementation across native and cross-platform frameworks, and the constellation of concerns -- versioning, caching, offline support, accessibility, testing, analytics, security -- that separate a prototype from a production system.
+
+---
+
+## The Core Architecture
+
+### What the Server Sends
+
+In a traditional mobile app, the server sends *data* -- a list of products, a user profile, a transaction history -- and the client decides how to display it. In SDUI, the server sends *UI descriptions*: structured documents that specify which components to render, in what order, with what content, configured with what properties.
+
+A simple example. Instead of returning:
+
+```json
+{
+  "user": { "name": "Vlad", "avatar_url": "...", "plan": "pro" }
+}
+```
+
+The server returns:
+
+```json
+{
+  "screen": {
+    "title": "Profile",
+    "sections": [
+      {
+        "type": "header_card",
+        "properties": {
+          "title": "Vlad",
+          "subtitle": "Pro Plan",
+          "image_url": "...",
+          "badge": { "type": "badge", "label": "PRO", "color": "accent" }
+        }
+      },
+      {
+        "type": "action_list",
+        "items": [
+          { "type": "action_item", "label": "Edit Profile", "icon": "pencil", "action": { "type": "navigate", "destination": "/profile/edit" } },
+          { "type": "action_item", "label": "Settings", "icon": "gear", "action": { "type": "navigate", "destination": "/settings" } }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The client doesn't know what a "profile screen" is. It knows what a `header_card` is, what an `action_list` is, what a `badge` is. It has native implementations of each. The server composes them.
+
+### What the Client Does
+
+The client maintains a *component registry* -- a mapping from `type` strings to native view implementations. When it receives a UI description, it walks the tree, looks up each `type` in the registry, and instantiates the corresponding native view with the provided properties.
+
+On iOS, `header_card` maps to a SwiftUI view or UIKit cell. On Android, it maps to a Composable or a custom View. In Flutter, it maps to a Widget. In React Native, it maps to a component. The rendering is fully native -- no web views, no compromises on platform conventions -- but the *composition* is server-controlled.
+
+### The Spectrum of Server Control
+
+SDUI isn't binary. It exists on a spectrum:
+
+**Layout-level SDUI** is the most common approach. The server controls which components appear and in what order, but each component is a self-contained native implementation with its own internal layout. The server says "show a product carousel here" but doesn't specify padding, font sizes, or alignment within the carousel. This is what most production systems (Airbnb, Shopify, DoorDash) use.
+
+**Property-level SDUI** gives the server control over component configuration: colors, sizes, text styles, spacing, visibility of sub-elements. The server can say "show a product card with large title, no subtitle, and a blue CTA button." This is more flexible but requires more careful schema design.
+
+**Pixel-level SDUI** attempts to have the server specify exact layout coordinates, sizes, and styles. This is almost never a good idea in mobile -- it breaks across screen sizes, accessibility settings, and platform conventions. Avoid it.
+
+The sweet spot for most teams is layout-level SDUI with selective property-level control for components that genuinely need server-side customization.
+
+---
+
+## Defining the Schema With OpenAPI
+
+### Why OpenAPI
+
+Your SDUI schema is the contract between backend and frontend. It needs to be precisely defined, versioned, machine-readable, and usable for code generation. OpenAPI 3.1 checks every box.
+
+OpenAPI is not just for REST endpoints. Its `components/schemas` section provides a rich schema language (based on JSON Schema) for defining the structure of your UI components. The same spec that documents your API endpoints also defines the shape of every UI component your server can send and your clients can render.
+
+This has profound practical benefits. You can generate TypeScript types for your backend, Swift Codable structs for iOS, Kotlin data classes for Android, Dart classes for Flutter, and TypeScript interfaces for React Native -- all from a single source of truth. When the schema changes, code generation catches mismatches at compile time, not at runtime.
+
+### Structuring the Component Schema
+
+Define each UI component as a schema in your OpenAPI spec. Use discriminated unions (via `oneOf` with a `type` discriminator) to represent the component hierarchy:
+
+```yaml
+components:
+  schemas:
+    UIComponent:
+      oneOf:
+        - $ref: '#/components/schemas/HeaderCard'
+        - $ref: '#/components/schemas/ActionList'
+        - $ref: '#/components/schemas/ProductCarousel'
+        - $ref: '#/components/schemas/Banner'
+        - $ref: '#/components/schemas/SectionDivider'
+      discriminator:
+        propertyName: type
+        mapping:
+          header_card: '#/components/schemas/HeaderCard'
+          action_list: '#/components/schemas/ActionList'
+          product_carousel: '#/components/schemas/ProductCarousel'
+          banner: '#/components/schemas/Banner'
+          section_divider: '#/components/schemas/SectionDivider'
+
+    HeaderCard:
+      type: object
+      required: [type, properties]
+      properties:
+        type:
+          type: string
+          enum: [header_card]
+        properties:
+          type: object
+          required: [title]
+          properties:
+            title:
+              type: string
+            subtitle:
+              type: string
+            image_url:
+              type: string
+              format: uri
+            badge:
+              $ref: '#/components/schemas/Badge'
+
+    Badge:
+      type: object
+      required: [type, label]
+      properties:
+        type:
+          type: string
+          enum: [badge]
+        label:
+          type: string
+        color:
+          $ref: '#/components/schemas/SemanticColor'
+
+    SemanticColor:
+      type: string
+      enum: [primary, secondary, accent, success, warning, error, surface]
+```
+
+### Screen and Section Structure
+
+Define the top-level structure that wraps your components:
+
+```yaml
+    Screen:
+      type: object
+      required: [id, sections]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+        navigation:
+          $ref: '#/components/schemas/NavigationConfig'
+        pull_to_refresh:
+          type: boolean
+          default: false
+
+    Section:
+      type: object
+      required: [id, components]
+      properties:
+        id:
+          type: string
+        header:
+          type: string
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/UIComponent'
+        layout:
+          $ref: '#/components/schemas/SectionLayout'
+
+    SectionLayout:
+      type: string
+      enum: [vertical_list, horizontal_scroll, grid_2col, grid_3col]
+```
+
+### Actions and Navigation
+
+UI components need to do things -- navigate, open URLs, trigger API calls, present sheets. Define an action schema:
+
+```yaml
+    UIAction:
+      oneOf:
+        - $ref: '#/components/schemas/NavigateAction'
+        - $ref: '#/components/schemas/OpenURLAction'
+        - $ref: '#/components/schemas/APICallAction'
+        - $ref: '#/components/schemas/PresentSheetAction'
+        - $ref: '#/components/schemas/DismissAction'
+      discriminator:
+        propertyName: type
+
+    NavigateAction:
+      type: object
+      required: [type, destination]
+      properties:
+        type:
+          type: string
+          enum: [navigate]
+        destination:
+          type: string
+        transition:
+          type: string
+          enum: [push, modal, replace]
+          default: push
+
+    APICallAction:
+      type: object
+      required: [type, endpoint, method]
+      properties:
+        type:
+          type: string
+          enum: [api_call]
+        endpoint:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE]
+        body:
+          type: object
+        on_success:
+          $ref: '#/components/schemas/UIAction'
+        on_error:
+          $ref: '#/components/schemas/UIAction'
+```
+
+---
+
+## The Design System: Every Schema Needs a Graphical Equivalent
+
+This is the principle that makes or breaks an SDUI system: **every component type defined in your schema must have a corresponding native implementation on every supported platform.** If `product_card` exists in the schema, it must render as a native SwiftUI view on iOS, a Composable on Android, a Widget in Flutter, and a component in React Native. No exceptions. No fallback-to-web-view. No "we'll add that one later."
+
+### The Component Catalog
+
+Your design system is the bridge between the schema (abstract) and the UI (concrete). It consists of a component catalog -- a living document (or better, a living app) that shows every component in the schema rendered on every platform.
+
+For each component, the catalog specifies its schema definition (the OpenAPI schema that describes its data shape), its visual design (Figma, Sketch, or in-tool screenshots showing the intended appearance), its iOS implementation (SwiftUI or UIKit), its Android implementation (Jetpack Compose or XML Views), its Flutter implementation (Widget), its React Native implementation (component), its accessibility semantics (labels, roles, traits per platform), and its behavioral specification (what happens on tap, on long press, on swipe).
+
+### Platform-Specific Rendering
+
+The same schema should produce platform-appropriate UI on each target. A `header_card` on iOS should feel like an iOS component -- using San Francisco font, respecting Dynamic Type, supporting Reduce Motion, using system-standard spacing. The same `header_card` on Android should feel like a Material component -- using Roboto, respecting system font scale, using Material elevation and shape system.
+
+This means your component implementations are not identical across platforms. They're *semantically* identical (same data, same behavior) but *visually* adapted to each platform's design language. The OpenAPI schema defines the data contract. The design system defines the visual contract per platform. The client implementation satisfies both.
+
+### Semantic Tokens, Not Raw Values
+
+Your schema should use semantic values, not raw ones. Don't send `"color": "#2196F3"`. Send `"color": "primary"`. Don't send `"font_size": 17`. Send `"text_style": "body"`. Don't send `"padding": 16`. Send `"spacing": "standard"`.
+
+The client resolves these tokens against its own platform's design system: `primary` maps to `Color.accentColor` on iOS, `MaterialTheme.colorScheme.primary` on Android, `Theme.of(context).colorScheme.primary` in Flutter. `body` maps to `Font.body` in SwiftUI, `MaterialTheme.typography.bodyLarge` in Compose, `Theme.of(context).textTheme.bodyLarge` in Flutter.
+
+This token-based approach means the server controls *what* to show without dictating *how* it looks on each platform. It also means your app automatically adapts to dark mode, high contrast mode, accessibility font sizes, and platform theme changes without any server-side awareness.
+
+### Component Lifecycle: Adding New Components
+
+When you need a new component type, the process is:
+
+1. Design the component in your design system tool (Figma, Sketch).
+2. Define the schema in OpenAPI -- the data shape, properties, and actions.
+3. Implement the component natively on each supported platform.
+4. Ship a client update that includes the new component renderer.
+5. The server can now include the new component in responses.
+
+Steps 1-4 happen once per component. Step 5 happens forever -- the server can compose the new component into any screen without further client changes.
+
+### Handling Unknown Components
+
+What happens when the server sends a component type that an older client doesn't recognize? This is the most critical versioning question in SDUI. Your options are to ignore the unknown component (skip it silently and render the rest of the screen), render a fallback (a generic placeholder or a "please update your app" message), or refuse to render (show an error screen requiring an app update).
+
+The first option is almost always correct for non-critical components. The third is appropriate only for components that are essential to the screen's function. Define a `fallback` property in your schema that the server can use to specify what older clients should do:
+
+```yaml
+    FallbackBehavior:
+      type: string
+      enum: [skip, placeholder, update_required]
+```
+
+---
+
+## Implementation: Native iOS
+
+### SwiftUI Approach
+
+On iOS with SwiftUI, the component registry is a function that maps component types to views:
+
+The core pattern is a `ComponentRenderer` view that accepts a `UIComponent` (your decoded schema model) and switches on its `type` to return the appropriate SwiftUI view. Each concrete component view receives strongly-typed properties generated from your OpenAPI schema (using tools like swift-openapi-generator or CreateAPI).
+
+SwiftUI's declarative nature is a natural fit for SDUI. A `Section` becomes a `LazyVStack` or `ScrollView`, a `SectionLayout.horizontal_scroll` becomes a `ScrollView(.horizontal)`, and each component renders as a native SwiftUI view within that container.
+
+Register for Dynamic Type, accessibility traits, and VoiceOver labels within each component implementation. The server's semantic tokens resolve against `@Environment(\.colorScheme)`, `@Environment(\.sizeCategory)`, and your app's design token system.
+
+### UIKit Approach
+
+For teams still on UIKit (or using it for specific screens that need fine-grained control), the component registry maps to `UIView` subclasses or `UICollectionViewCell` subclasses. A diffable data source backed by `UICollectionView` with compositional layout provides the scrolling container, with each section configuring its layout (list, horizontal scroll, grid) from the schema's `SectionLayout` enum.
+
+---
+
+## Implementation: Native Android
+
+### Jetpack Compose Approach
+
+Compose is arguably the most natural fit for SDUI in the native ecosystem. Composable functions map directly to component types, and Compose's reactive model means that updating the server response automatically triggers recomposition.
+
+The registry is a `@Composable` function that takes a `UIComponent` sealed class (generated from OpenAPI using openapi-generator for Kotlin) and renders the matching composable. Sections become `LazyColumn` items, horizontal scrolls become `LazyRow`, and the entire screen is a `Scaffold` with pull-to-refresh, navigation, and error states managed by a ViewModel that fetches the `Screen` schema from the API.
+
+Material Design tokens map directly to `MaterialTheme.colorScheme`, `MaterialTheme.typography`, and `MaterialTheme.shapes`. Semantic color values from the schema resolve against the current theme, automatically supporting dark mode and dynamic color (Material You).
+
+### XML Views Approach
+
+For legacy codebases, the registry maps component types to `RecyclerView.ViewHolder` subclasses. A `ConcatAdapter` composes multiple adapters (one per section), and each section's layout manager corresponds to the `SectionLayout` enum. This approach works but is significantly more boilerplate-heavy than Compose.
+
+---
+
+## Implementation: Flutter
+
+Flutter's widget-based architecture maps cleanly to SDUI. The component registry is a function that takes a decoded JSON map and returns a `Widget`. Libraries like Flutter Mirai and Duit Flutter provide production-ready implementations of this pattern.
+
+The key advantage in Flutter is that you implement the component registry once and it runs on iOS, Android, web, and desktop. There's no per-platform work for the rendering layer. The key disadvantage is that Flutter widgets don't automatically match platform conventions -- a `HeaderCard` widget looks the same on iOS and Android unless you explicitly adapt it with platform checks.
+
+For teams that want platform-adaptive rendering (iOS components that feel like iOS, Android components that feel like Android), use the `platform` property from the schema or check `Theme.of(context).platform` to select between Cupertino and Material variants of each component.
+
+The deserialization layer maps JSON to Dart classes generated from your OpenAPI schema using openapi-generator-dart or swagger-dart-code-generator. Each `type` string maps to a widget builder in a `Map<String, Widget Function(Map<String, dynamic>)>` registry.
+
+---
+
+## Implementation: React Native
+
+React Native's component model aligns well with SDUI. The registry maps type strings to React components. The schema's JSON response is parsed (TypeScript interfaces generated from OpenAPI via openapi-typescript or orval), and a renderer component walks the tree, looking up each type in the registry and rendering the corresponding React Native component.
+
+The advantage of React Native is that you can update the component registry itself via CodePush or similar OTA update mechanisms, meaning new component types can be deployed without a full app store review. This compounds the SDUI advantage -- not only can the server compose existing components freely, but you can also deploy entirely new components over the air.
+
+The disadvantage is performance overhead for deeply nested component trees. Profile your renderer with React DevTools and use `React.memo` to prevent unnecessary re-renders when the schema response changes partially.
+
+---
+
+## Versioning: The Problem That Defines SDUI Systems
+
+Versioning is where SDUI systems succeed or fail. The server must know what the client can render. The client must handle responses that include components it doesn't recognize. And the whole system must evolve without breaking older clients.
+
+### Client Capabilities
+
+Every API request from the client should include a capability header or parameter that declares which component types (and which versions of those types) the client supports. This can be a simple version number (`X-Schema-Version: 12`), a feature flag set (`X-Capabilities: header_card,product_carousel,video_player`), or the app version itself (from which the server infers supported components via a mapping table).
+
+The server uses this information to tailor its responses -- sending a `video_player` component only to clients that support it, and falling back to an `image_card` for older clients. This is the same pattern used by content negotiation in HTTP, applied to UI components.
+
+### Schema Versioning in OpenAPI
+
+Version your schema in the OpenAPI spec's `info.version` field. When you add a new component type, increment the minor version. When you change the shape of an existing component in a breaking way (removing a required field, changing a type), increment the major version. Treat it like semver.
+
+For non-breaking changes (adding optional fields to existing components), the server can start including them immediately. Old clients that don't recognize the new fields will ignore them (assuming your deserialization is lenient, which it should be).
+
+For breaking changes, maintain parallel schema versions and use the client capability header to serve the appropriate version. Breaking changes should be rare -- prefer evolution (adding optional fields) over revolution (restructuring components).
+
+---
+
+## Caching and Offline Support
+
+### Caching UI Responses
+
+SDUI responses are highly cacheable. Use standard HTTP caching headers (`Cache-Control`, `ETag`, `Last-Modified`) on your screen endpoints. The client caches the entire UI description and renders it instantly on subsequent visits, making a conditional request (`If-None-Match`) to check for updates.
+
+For screens that change rarely (settings, about, FAQ), cache aggressively with long TTLs. For screens that change frequently (home feed, promotions), use short TTLs with stale-while-revalidate to show cached content immediately while fetching updates in the background.
+
+### Offline Rendering
+
+Because SDUI responses are self-contained descriptions, they're ideal for offline rendering. Cache the last successful response for each screen, and when the network is unavailable, render from cache. The user sees the last-known-good UI rather than an error screen.
+
+For screens with dynamic data (product prices, inventory counts), separate the UI structure (cacheable for days) from the volatile data (cacheable for minutes). The UI schema references data endpoints, and the client fetches fresh data to inject into the cached structure.
+
+### Prefetching
+
+Prefetch UI schemas for screens the user is likely to visit next. If the user is on the home screen and there's a tab bar with four tabs, prefetch the schemas for the other three tabs while the user is reading the home screen. Navigation becomes instant because the UI description is already local.
+
+---
+
+## Actions, Events, and Client-Side Logic
+
+### The Action System
+
+Actions are the behaviors attached to UI components: what happens when a user taps a button, submits a form, swipes a card, or pulls to refresh. Your action schema (defined in OpenAPI) should cover navigation (push, present modally, deep link), API calls (with success/failure handling and optimistic updates), URL opening (in-app browser or external), sheet/dialog presentation, analytics event tracking, local state changes (add to cart, toggle favorite), and form submission with validation.
+
+Complex actions compose: an "Add to Cart" button might trigger an API call, show a success toast on completion, update a cart badge count, and fire an analytics event -- all defined in the server response as a chain of actions.
+
+### Where Logic Lives
+
+Not everything should be server-driven. Client-side logic should handle animation, gesture recognition, scroll physics, form validation (for immediate feedback), local storage operations, camera/biometric/sensor access, and complex stateful interactions (drag and drop, multi-step wizards with local state).
+
+Server-side logic should handle screen composition, feature flags and A/B testing, content personalization, business rule enforcement (what actions are available given the user's state), and navigation graph configuration.
+
+The boundary is: the server controls *what* appears and *what* can be done. The client controls *how* it appears and *how* interactions feel.
+
+---
+
+## A/B Testing and Personalization
+
+SDUI makes A/B testing trivially easy. The server already controls what the client displays -- to run an A/B test, simply serve different screen configurations to different user segments. No client changes. No app store review. No SDK integration.
+
+Test a new onboarding flow by sending a different sequence of screens to the test group. Test a new product card layout by swapping the component type. Test a new call-to-action placement by reordering sections. All server-side. All immediate. All measurable through your existing analytics pipeline.
+
+Personalization follows the same mechanism. The server knows the user's segment, history, preferences, and context. It composes a screen tailored to that specific user -- surfacing relevant content, hiding irrelevant sections, adjusting the prominence of different components -- all without the client having any personalization logic.
+
+---
+
+## Accessibility
+
+Every component in your registry must be accessible. This is non-negotiable and requires platform-specific work.
+
+The schema should include accessibility-relevant properties: `accessibility_label` (the text that screen readers announce), `accessibility_hint` (the action description), `accessibility_role` (button, heading, image, link), and `is_decorative` (whether the element should be hidden from assistive technology).
+
+Each platform implementation maps these properties to native accessibility APIs: `.accessibilityLabel()` and `.accessibilityAddTraits()` in SwiftUI, `Modifier.semantics { contentDescription = ... }` in Compose, `Semantics(label: ...)` in Flutter, and `accessibilityLabel` in React Native.
+
+Dynamic Type (iOS) and font scaling (Android) must work for every component. The schema's semantic text styles (`body`, `headline`, `caption`) map to scalable typography systems on each platform.
+
+The server should avoid sending accessibility-hostile configurations -- text over images without sufficient contrast, interactive elements too small to tap, content that relies solely on color to convey meaning. Validate these constraints server-side before sending the response, or use a linting step in your CI pipeline that checks schema responses against WCAG criteria.
+
+---
+
+## Analytics and Event Tracking
+
+SDUI centralizes not just rendering but also analytics instrumentation. The server can embed tracking metadata in every component:
+
+```yaml
+    TrackingContext:
+      type: object
+      properties:
+        impression_event:
+          type: string
+        tap_event:
+          type: string
+        position:
+          type: integer
+        experiment_id:
+          type: string
+        variant_id:
+          type: string
+```
+
+When the client renders a component, it fires the `impression_event`. When the user interacts with it, it fires the `tap_event`. Position tracking enables scroll-depth analytics. Experiment metadata connects interaction data to A/B test results.
+
+This eliminates one of the most common analytics failures in mobile apps: events that are defined in a tracking plan but never implemented in client code. If the analytics metadata is in the schema, the client's generic rendering engine fires it automatically.
+
+---
+
+## Forms and User Input
+
+Server-driven forms require the schema to describe field types, validation rules, and submission behavior:
+
+```yaml
+    FormField:
+      type: object
+      required: [type, field_id, label]
+      properties:
+        type:
+          type: string
+          enum: [text_input, email_input, password_input, number_input,
+                 date_picker, dropdown, checkbox, radio_group, toggle]
+        field_id:
+          type: string
+        label:
+          type: string
+        placeholder:
+          type: string
+        required:
+          type: boolean
+        validation:
+          $ref: '#/components/schemas/ValidationRule'
+        initial_value:
+          type: string
+
+    ValidationRule:
+      type: object
+      properties:
+        min_length:
+          type: integer
+        max_length:
+          type: integer
+        pattern:
+          type: string
+          description: "Regex pattern for validation"
+        error_message:
+          type: string
+```
+
+Client-side validation provides immediate feedback (the regex runs locally), while server-side validation on form submission enforces business rules the client can't verify.
+
+---
+
+## Error Handling
+
+Every SDUI response should include error handling at multiple levels.
+
+**Screen-level errors:** The API returns an HTTP error. The client shows a generic error screen with a retry button. Include an error-specific UI in the schema itself -- the server can send a `Screen` with an error component that has a customized message, illustration, and action (retry, contact support, go home).
+
+**Section-level errors:** One section's data fails to load. The client hides that section and renders the rest. The schema's `Section` can include a `fallback` property specifying what to show if the section's data source fails.
+
+**Component-level errors:** An image fails to load, a price is missing. Each component handles its own degraded state. The schema can define `required` properties (without which the component is skipped) and `optional` properties (where the component gracefully degrades).
+
+**Unknown component errors:** Already covered in the versioning section. Skip, placeholder, or update-required, based on the `fallback` behavior in the schema.
+
+---
+
+## Security Considerations
+
+### Schema Validation
+
+The client must validate server responses before rendering. Don't blindly trust the schema. Validate that `type` values match known components, that URLs are well-formed and use HTTPS, that action destinations are within allowed navigation paths, and that no component exceeds resource limits (image sizes, text lengths, nesting depth).
+
+### Content Injection
+
+Since the server controls what the client displays, a compromised server (or a man-in-the-middle attack) could inject malicious content: phishing screens, misleading information, or actions that trigger unintended API calls. Mitigate with HTTPS (mandatory), certificate pinning (for high-security apps), response signing (the server signs the schema, the client verifies), and input sanitization (never render raw HTML from the schema).
+
+### Deep Link Security
+
+Actions that navigate to deep links or open URLs must be validated against an allowlist. The client should refuse to navigate to arbitrary URLs or deep links not defined in its navigation graph.
+
+---
+
+## Testing
+
+### Schema Contract Testing
+
+Use the OpenAPI spec as the source of truth for contract tests. Generate mock responses from the spec (tools like Prism can generate realistic mock data from OpenAPI schemas) and verify that your client can deserialize and render every possible response.
+
+### Snapshot Testing
+
+For each component, generate a snapshot test that renders the component with representative data and compares it against a baseline. Run snapshots on every platform -- the same schema input should produce visually correct output on iOS, Android, Flutter, and React Native independently.
+
+### Integration Testing
+
+Test the full pipeline: server generates a response, client fetches it, client renders it, user interacts with it. Use your SDUI schema's action system to verify that navigation, API calls, and state changes work end to end.
+
+### Visual Regression Testing
+
+Because the server controls layout composition, a server-side change can inadvertently break the visual appearance of a screen. Automated visual regression testing (capturing screenshots and comparing against baselines) catches layout regressions that unit tests and snapshot tests can't detect.
+
+### Accessibility Testing
+
+Every component, on every platform, must pass accessibility validation: labels present, touch targets meeting minimums, contrast ratios sufficient, reading order logical. Automate these checks in your test suite.
+
+---
+
+## Performance Considerations
+
+### Payload Size
+
+SDUI responses are larger than pure data responses because they include structural information. Mitigate with response compression (gzip/brotli), pagination (load screens in sections, with lazy loading for below-the-fold content), and component deduplication (reference a component definition once and reuse it via IDs).
+
+### Rendering Performance
+
+Deeply nested component trees can cause rendering issues, particularly on older devices. Profile your component renderer. Use lazy rendering (don't inflate off-screen components), recycling (reuse component views in scrolling lists), and pagination (limit the number of components per API response).
+
+### Image Optimization
+
+The server knows the device's screen dimensions (from the request headers). Use this to serve appropriately sized images -- don't send 4K hero images to a device with a 375pt-wide screen. Include image sizing parameters in your schema and generate CDN URLs with the correct dimensions.
+
+---
+
+## Migration Strategy: From Traditional to Server-Driven
+
+### Start Small
+
+Don't rewrite your entire app. Pick one screen that changes frequently and would benefit from server-side control -- the home feed, a promotions page, a settings screen. Implement SDUI for that single screen while keeping everything else traditional. Learn from the experience before expanding.
+
+### Build the Component Library First
+
+Before making any screen server-driven, build and ship the component implementations. Your app should contain native renderers for every component type in your initial schema, even if no screen uses them yet. This means the client is already capable of rendering server-driven screens before the server starts sending them.
+
+### Dual-Mode Rendering
+
+During migration, screens can operate in dual mode: the client has a traditional implementation (the current code) and a server-driven renderer (the new system). A feature flag determines which renders. This allows instant rollback if the server-driven version has issues.
+
+### Migrate Screen by Screen
+
+Once the component library is proven and the first server-driven screen is stable, expand to additional screens one at a time. Each screen migration is a self-contained project with its own timeline and rollback strategy.
+
+---
+
+## When SDUI Is Not the Right Choice
+
+SDUI is powerful, but it's not universal. It's not a good fit for heavily interactive screens with complex local state (drawing tools, video editors, real-time games), for screens that rarely change (a static about page, a terms of service screen that updates annually), for apps with a single platform (if you only target iOS, the app store review cycle is your only bottleneck, and SDUI's cross-platform benefits don't apply), or for teams without backend engineering capacity (SDUI shifts work from client to server -- you need backend engineers who understand UI composition).
+
+SDUI shines for content-heavy screens that change frequently, for multi-platform apps where consistency across iOS, Android, web, and TV matters, for teams that need to A/B test and personalize aggressively, and for organizations where app store review cycles are a business bottleneck.
+
+---
+
+## The Bigger Picture: SDUI as an Organizational Pattern
+
+SDUI is as much an organizational pattern as a technical one. It changes who is responsible for what the user sees. In a traditional app, frontend developers control the UI. In an SDUI app, backend developers (or product managers, or a content team using a visual editor backed by the schema) control screen composition.
+
+This enables new workflows. A marketing team can create a promotional screen by composing existing components in a CMS that outputs your schema format -- no engineering ticket required. A product manager can reorder sections on the home feed to optimize for a specific KPI -- tested immediately, rolled back if it doesn't work.
+
+But it also requires new discipline. The component library becomes the core product. Its design, its documentation, its accessibility, its performance -- all must be maintained with the same rigor as any public API. Because that's what it is: an API between your backend (which composes screens) and your frontend (which renders them), mediated by a schema that must be precise, versioned, and trustworthy.
+
+Build the schema carefully. Build the components thoroughly. Build the system incrementally. And then enjoy never waiting for an app store review to change what your users see.

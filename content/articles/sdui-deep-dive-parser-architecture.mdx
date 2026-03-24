@@ -1,0 +1,522 @@
+---
+title: "Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield"
+description: "A technical deep dive into SDUI parser architecture: component registries, recursive rendering, the Visitor pattern, and where OpenAPI code generators break with UI schemas."
+date: "2026-03-08"
+tags: ["Server-Driven UI", "Architecture", "Mobile Development"]
+readTime: "20 min"
+---
+
+*This is a companion piece to the main Server-Driven UI article. It addresses the hard engineering problems that surface once you move beyond the concept and start building: how to parse and render a recursive component tree without a sprawling switch statement, how to handle deeply nested compositions, and where OpenAPI code generators break when your schema describes UI rather than REST resources.*
+
+---
+
+## The Problem With the Big Switch
+
+Every SDUI tutorial starts the same way. The server sends a JSON tree. The client parses it. And somewhere in the codebase, there's a function that takes a `type` string and returns a view:
+
+```swift
+// The brute-force approach — every tutorial, every blog post
+func buildComponent(from component: UIComponent) -> some View {
+    switch component.type {
+    case "header_card":
+        return AnyView(HeaderCardView(data: component.properties))
+    case "product_carousel":
+        return AnyView(ProductCarouselView(data: component.properties))
+    case "action_list":
+        return AnyView(ActionListView(data: component.properties))
+    case "banner":
+        return AnyView(BannerView(data: component.properties))
+    case "badge":
+        return AnyView(BadgeView(data: component.properties))
+    // ... 47 more cases
+    default:
+        return AnyView(EmptyView())
+    }
+}
+```
+
+This works for a demo with five components. It collapses under its own weight at thirty. By fifty, the switch statement is hundreds of lines long, lives in a single file that every team member touches, generates merge conflicts constantly, and is impossible to unit test in isolation. Adding a new component means modifying this central function, which means rebuilding the module it lives in, retesting everything, and hoping nobody else was also adding a component in a parallel PR.
+
+The problem is structural: the switch couples *discovery* (which component type is this?) to *rendering* (how do I draw it?) in a single monolithic function. And it uses `AnyView` type erasure, which destroys SwiftUI's ability to diff the view hierarchy efficiently.
+
+This is the brute-force parser. It's the thing that every scalable SDUI system needs to replace.
+
+---
+
+## The Type-Safe Alternative: Component Registry With Protocol Conformance
+
+The well-established pattern that eliminates the switch is the **component registry** -- a dictionary that maps type strings to factory functions, combined with a protocol (or interface) that every component conforms to. This is a direct application of the **Strategy pattern** backed by a **registry map**, and it's the same pattern used by plugin architectures, dependency injection containers, and serialization frameworks.
+
+### The Architecture
+
+Instead of one function that knows about every component, you have three things:
+
+1. **A protocol** that defines what every component renderer must provide.
+2. **Individual renderers** -- one per component type -- each conforming to the protocol.
+3. **A registry** -- a dictionary that maps `type` strings to renderer instances or factories.
+
+The renderer walks the component tree, looks up each `type` in the registry, and delegates rendering to the registered factory. No switch. No centralized knowledge of component types. Adding a new component means creating a new renderer and registering it -- nothing else changes.
+
+### Swift Implementation
+
+```swift
+// 1. The protocol — every component renderer conforms to this
+protocol ComponentRenderer {
+    associatedtype Body: View
+    func render(properties: [String: Any], children: [UIComponentNode]) -> Body
+}
+
+// Type-erased wrapper for the registry (needed because of associatedtype)
+struct AnyComponentRenderer {
+    private let _render: ([String: Any], [UIComponentNode]) -> AnyView
+
+    init<R: ComponentRenderer>(_ renderer: R) {
+        _render = { props, children in
+            AnyView(renderer.render(properties: props, children: children))
+        }
+    }
+
+    func render(properties: [String: Any], children: [UIComponentNode]) -> AnyView {
+        _render(properties, children)
+    }
+}
+
+// 2. Individual renderers — self-contained, testable in isolation
+struct HeaderCardRenderer: ComponentRenderer {
+    func render(properties: [String: Any], children: [UIComponentNode]) -> some View {
+        HeaderCardView(
+            title: properties["title"] as? String ?? "",
+            subtitle: properties["subtitle"] as? String,
+            imageURL: properties["image_url"] as? String
+        )
+    }
+}
+
+struct ActionListRenderer: ComponentRenderer {
+    func render(properties: [String: Any], children: [UIComponentNode]) -> some View {
+        ActionListView(items: children)
+    }
+}
+
+// 3. The registry — a dictionary, not a switch
+final class ComponentRegistry {
+    static let shared = ComponentRegistry()
+
+    private var renderers: [String: AnyComponentRenderer] = [:]
+
+    func register<R: ComponentRenderer>(_ renderer: R, for type: String) {
+        renderers[type] = AnyComponentRenderer(renderer)
+    }
+
+    func renderer(for type: String) -> AnyComponentRenderer? {
+        renderers[type]
+    }
+}
+
+// Registration happens at startup — declarative, modular
+func registerComponents() {
+    let registry = ComponentRegistry.shared
+    registry.register(HeaderCardRenderer(), for: "header_card")
+    registry.register(ActionListRenderer(), for: "action_list")
+    registry.register(ProductCarouselRenderer(), for: "product_carousel")
+    registry.register(BannerRenderer(), for: "banner")
+    // Each team can register their own components
+}
+```
+
+### Why This Scales
+
+Adding a new component type is a purely additive operation: create a new file with the renderer, add one `registry.register(...)` call. No existing code changes. No merge conflicts. No rebuilding the world.
+
+Each renderer is independently testable -- you can instantiate it with mock properties and verify its output without involving the registry or any other component.
+
+Teams can own their own components. The payments team registers `PaymentCardRenderer`. The social team registers `UserProfileRenderer`. They never touch each other's code.
+
+The registry can be configured differently per context: the main app registers all components, a widget extension registers a subset, a testing target registers mock renderers that return simplified views.
+
+### Kotlin Sealed Classes + Registry Hybrid
+
+Kotlin offers an interesting middle ground with sealed classes. A sealed class hierarchy gives you exhaustive `when` matching (the compiler warns if you miss a case), which is safer than a dictionary lookup that can fail at runtime. But pure sealed classes still centralize rendering in a single `when` expression.
+
+The hybrid approach uses sealed classes for the data model (parsing) and a registry map for rendering:
+
+```kotlin
+// Sealed hierarchy for type-safe parsing
+sealed class UIComponent {
+    abstract val id: String
+    abstract val children: List<UIComponent>
+
+    data class HeaderCard(
+        override val id: String,
+        val title: String,
+        val subtitle: String?,
+        override val children: List<UIComponent> = emptyList()
+    ) : UIComponent()
+
+    data class ActionList(
+        override val id: String,
+        override val children: List<UIComponent>
+    ) : UIComponent()
+
+    // Each new type: add a data class here (compile-time safety)
+    // AND register a renderer (runtime flexibility)
+}
+
+// Registry for rendering — decoupled from the data model
+object ComponentRendererRegistry {
+    private val renderers = mutableMapOf<KClass<out UIComponent>, @Composable (UIComponent) -> Unit>()
+
+    inline fun <reified T : UIComponent> register(noinline renderer: @Composable (T) -> Unit) {
+        renderers[T::class] = { component -> renderer(component as T) }
+    }
+
+    @Composable
+    fun Render(component: UIComponent) {
+        val renderer = renderers[component::class]
+        if (renderer != null) {
+            renderer(component)
+        } else {
+            FallbackComponent(component)
+        }
+    }
+}
+```
+
+Kotlin's exhaustive `when` still serves a purpose -- use it in the deserializer, where you need to parse JSON into the correct sealed subclass based on the `type` discriminator. The compiler guarantees you handle every known type during parsing. Then the registry handles rendering, where you want decoupled, modular factories rather than a monolithic switch.
+
+### Flutter Registry
+
+In Dart/Flutter, the registry is a `Map<String, Widget Function(Map<String, dynamic>, List<Widget>)>`:
+
+```dart
+typedef ComponentBuilder = Widget Function(
+  Map<String, dynamic> properties,
+  List<Widget> children,
+);
+
+class ComponentRegistry {
+  final Map<String, ComponentBuilder> _builders = {};
+
+  void register(String type, ComponentBuilder builder) {
+    _builders[type] = builder;
+  }
+
+  Widget build(String type, Map<String, dynamic> properties, List<Widget> children) {
+    final builder = _builders[type];
+    if (builder != null) {
+      return builder(properties, children);
+    }
+    return const SizedBox.shrink(); // Unknown component fallback
+  }
+}
+
+// Registration
+final registry = ComponentRegistry()
+  ..register('header_card', (props, children) => HeaderCard(
+      title: props['title'] as String,
+      subtitle: props['subtitle'] as String?,
+    ))
+  ..register('action_list', (props, children) => ActionList(children: children))
+  ..register('product_carousel', (props, children) => ProductCarousel(
+      items: (props['items'] as List).cast<Map<String, dynamic>>(),
+    ));
+```
+
+With Dart 3's sealed classes and pattern matching, you can also get exhaustive parsing similar to Kotlin, then delegate to the registry for rendering.
+
+### React Native Registry
+
+```typescript
+type ComponentFactory = (
+  props: Record<string, unknown>,
+  children: React.ReactNode[]
+) => React.ReactElement;
+
+const registry = new Map<string, ComponentFactory>();
+
+registry.set('header_card', (props, children) => (
+  <HeaderCard title={props.title as string} subtitle={props.subtitle as string} />
+));
+
+registry.set('action_list', (props, children) => (
+  <ActionList>{children}</ActionList>
+));
+
+// The renderer — generic, never changes
+const RenderComponent: React.FC<{ node: UIComponentNode }> = ({ node }) => {
+  const factory = registry.get(node.type);
+  if (!factory) return null;
+
+  const childElements = (node.children ?? []).map((child, i) => (
+    <RenderComponent key={child.id ?? i} node={child} />
+  ));
+
+  return factory(node.properties ?? {}, childElements);
+};
+```
+
+---
+
+## The Visitor Pattern: When Tree Traversal Gets Complex
+
+The component registry handles the common case: walk the tree, look up each type, render it. But when you need to perform *multiple different operations* on the same component tree -- rendering, accessibility auditing, analytics extraction, layout measurement, serialization back to JSON -- the **Visitor pattern** becomes the right tool.
+
+The Visitor pattern separates the algorithm (what you do with each component) from the structure (the component tree itself). Each component accepts a visitor, and the visitor has a method for each component type. Adding a new operation means adding a new visitor -- no changes to the component classes. Adding a new component type means adding a method to each visitor -- the compiler tells you exactly where.
+
+This is particularly powerful for SDUI because the same component tree is used for multiple purposes: rendering to native views, extracting accessibility labels for testing, generating analytics impressions, validating schema compliance, and serializing modifications back to the server.
+
+In practice, most teams use the registry for rendering (the hot path) and the Visitor for cross-cutting concerns (accessibility audits, analytics extraction, schema validation). They're complementary, not competing.
+
+---
+
+## Nested Components: The Recursive Tree
+
+### The Core Challenge
+
+Real SDUI schemas are trees, not flat lists. A `Section` contains `UIComponent`s. A `ProductCard` contains a `Badge`, an `Image`, a `PriceLabel`, and an `ActionButton`. A `FormSection` contains `FormField`s, each of which may contain a `ValidationIndicator`. Nesting can go arbitrarily deep.
+
+The component tree must be parsed recursively and rendered recursively. The parser encounters a `product_card`, parses its properties, then discovers it has `children` -- which are themselves components that must be parsed the same way. The renderer encounters a `product_card`, renders its shell, then renders its children inside that shell -- each child rendered by the same registry lookup mechanism.
+
+### Recursive Parsing
+
+Your `UIComponentNode` model must be self-referential:
+
+```swift
+struct UIComponentNode: Codable {
+    let type: String
+    let id: String?
+    let properties: [String: AnyCodable]?
+    let children: [UIComponentNode]?  // Recursive — nodes contain nodes
+    let action: UIAction?
+}
+```
+
+The parser walks this tree depth-first. At each node, it looks up the `type` in the registry, passes the `properties`, and recursively renders the `children` as the child views of the current component.
+
+```swift
+// The recursive renderer — works for any depth
+struct ComponentTreeRenderer: View {
+    let node: UIComponentNode
+    let registry: ComponentRegistry
+
+    var body: some View {
+        if let renderer = registry.renderer(for: node.type) {
+            let childViews = (node.children ?? []).map { child in
+                ComponentTreeRenderer(node: child, registry: registry)
+            }
+            renderer.render(
+                properties: node.properties?.rawValue ?? [:],
+                children: childViews
+            )
+        }
+    }
+}
+```
+
+### Depth Limits and Cycle Detection
+
+An arbitrarily deep tree can cause stack overflows in recursive renderers and exponential layout computation in deeply nested constraint systems. Enforce a maximum depth (typically 10-15 levels is more than enough for any reasonable UI) and reject or truncate responses that exceed it.
+
+If your schema allows components to reference other components by ID (a form of indirection), you also need cycle detection to prevent infinite loops. A component that references itself (directly or transitively) must be caught at parse time.
+
+### Children vs Slots
+
+Not all children are equal. A `ProductCard` doesn't just have a generic list of children -- it has a *header* slot, a *body* slot, and a *footer* slot, each accepting specific component types:
+
+```yaml
+ProductCard:
+  type: object
+  properties:
+    type:
+      type: string
+      enum: [product_card]
+    slots:
+      type: object
+      properties:
+        header:
+          $ref: '#/components/schemas/UIComponent'
+        body:
+          type: array
+          items:
+            $ref: '#/components/schemas/UIComponent'
+        footer:
+          $ref: '#/components/schemas/UIComponent'
+        badge:
+          $ref: '#/components/schemas/UIComponent'
+```
+
+Named slots give the parent component control over where each child renders, rather than treating children as a flat list. The renderer unpacks slots by name and places each child in its designated area.
+
+---
+
+## OpenAPI Code Generator Pitfalls
+
+OpenAPI is powerful for defining SDUI schemas. OpenAPI code generators are *fragile* when those schemas use the patterns SDUI requires: discriminated unions, recursive types, deeply nested `oneOf`, and polymorphic arrays. Here are the specific problems you'll hit and how to work around them.
+
+### Problem 1: Discriminated Unions (`oneOf` + `discriminator`)
+
+SDUI schemas rely heavily on discriminated unions -- a `UIComponent` is a `oneOf` that could be a `HeaderCard`, `ProductCarousel`, `Banner`, etc., distinguished by a `type` property. OpenAPI 3.1 supports this with `discriminator.mapping`.
+
+**What breaks:** Many code generators handle `oneOf` poorly. Some generate a single flat struct with all possible properties as optionals (losing type safety entirely). Others generate the correct types but produce broken deserialization code that doesn't actually read the discriminator value. Swift's `swift-openapi-generator` handles discriminators reasonably well but produces verbose code. Kotlin's `openapi-generator` often generates a generic `OneOfXyz` wrapper instead of proper sealed class hierarchies.
+
+**Workaround:** Generate the models, then hand-write or post-process the deserialization. Use the generated types (the data classes/structs themselves are usually correct) but replace the generated decoder with a custom one that reads the `type` discriminator and dispatches to the correct type's decoder. In Kotlin, map the generated classes to a sealed class hierarchy manually or use a Moshi/Kotlinx.serialization polymorphic adapter. In Swift, write a custom `init(from decoder:)` that peeks at the `type` key.
+
+### Problem 2: Recursive Types (Self-Referential Schemas)
+
+A `UIComponentNode` with a `children: [UIComponentNode]` property is recursive. OpenAPI handles this with `$ref` -- a component references itself:
+
+```yaml
+UIComponentNode:
+  type: object
+  properties:
+    children:
+      type: array
+      items:
+        $ref: '#/components/schemas/UIComponentNode'
+```
+
+**What breaks:** Some generators enter infinite loops during code generation. Others generate the type correctly but produce broken serialization code that doesn't handle the recursion (no base case). Swift generators sometimes produce value types (structs) for recursive schemas, which Swift doesn't support -- you need reference types (classes) or indirect enums.
+
+**Workaround:** If your generator can't handle recursive types, break the recursion with an intermediate type. Instead of `children: [UIComponentNode]`, define `children: [UIComponentRef]` where `UIComponentRef` is a simple wrapper. Or exclude recursive fields from generation and add them manually as lazy/indirect properties.
+
+### Problem 3: Deeply Nested `oneOf` / `anyOf`
+
+When a `UIComponent` (itself a `oneOf`) contains children that are also `UIComponent`s (also `oneOf`), you get nested polymorphism. A `Section` contains a `oneOf UIComponent` array. A `ProductCard` (one variant of `UIComponent`) has slots that are each a `oneOf UIComponent`. This nesting of union types inside union types is where most generators produce incorrect, uncompilable, or wildly over-complicated code.
+
+**What breaks:** Generators may flatten the nested unions into a single massive union, losing the structural hierarchy. Others may generate intermediate wrapper types for each nesting level (`UIComponentOneOf`, `UIComponentOneOfOneOf`), creating an unusable API surface. Discriminator mappings often don't propagate correctly through nesting levels -- the inner `oneOf` loses its discriminator.
+
+**Workaround:** Define the `UIComponent` union exactly once in your schema and reference it everywhere with `$ref`. Never inline the `oneOf` at the point of use. This gives generators a single, canonical definition to work with:
+
+```yaml
+# GOOD — single definition, referenced everywhere
+ProductCard:
+  properties:
+    badge:
+      $ref: '#/components/schemas/UIComponent'   # References the canonical union
+    footer:
+      $ref: '#/components/schemas/UIComponent'
+
+# BAD — inlined union, generators choke
+ProductCard:
+  properties:
+    badge:
+      oneOf:                                      # Don't do this
+        - $ref: '#/components/schemas/Badge'
+        - $ref: '#/components/schemas/Icon'
+```
+
+### Problem 4: Semantic Token Enums With Platform Mapping
+
+Your schema uses semantic enums (`SemanticColor: primary | secondary | accent | ...`). Generators produce the enum correctly, but you need to map each value to a platform-specific token (`primary` -> `Color.accentColor` on iOS, `MaterialTheme.colorScheme.primary` on Android). This mapping isn't something the generator can produce -- it's platform logic.
+
+**Approach:** Generate the enum. Then write a platform-specific extension that maps each case to the native token. This extension is hand-written code that lives alongside the generated code. Never modify generated files directly -- they'll be overwritten on the next generation run.
+
+### Problem 5: Action Schema Polymorphism
+
+The `UIAction` union (navigate, open URL, API call, dismiss, etc.) is another discriminated union that generators struggle with, particularly when actions are nested (an `APICallAction` has `on_success` and `on_error` fields that are themselves `UIAction`s -- recursive polymorphism).
+
+**Workaround:** Same as Problem 2 -- break the recursion if your generator can't handle it, and hand-write the deserialization for action chains.
+
+### Problem 6: The `additionalProperties` Trap
+
+SDUI component properties are often semi-structured -- you know some fields (`title`, `subtitle`) but want to pass through unknown fields for forward compatibility. Using `additionalProperties: true` in OpenAPI is the correct schema declaration, but generators handle it inconsistently. Some ignore additional properties entirely. Others generate a `Map<String, Any>` that loses all type safety for the known fields.
+
+**Approach:** Define all known properties explicitly in the schema. Use `additionalProperties: true` for forward compatibility but don't rely on generators to produce useful code for the additional properties. Access them through a raw dictionary alongside the typed model.
+
+### The Pragmatic Strategy
+
+For SDUI schemas, the most productive approach to code generation is:
+
+1. **Generate the data models** (structs, data classes, interfaces) -- these are usually correct.
+2. **Hand-write the deserialization** for polymorphic types (the discriminated unions) using your platform's serialization library directly (Kotlinx.serialization with `@Polymorphic`, Swift's custom `Codable`, Dart's `json_serializable` with custom converters).
+3. **Hand-write the registry** (the mapping from types to renderers) -- this is application logic, not something a schema generator should produce.
+4. **Generate the API client** (the networking layer) -- this is what OpenAPI generators do best.
+
+Treat the OpenAPI spec as the *source of truth for the contract* but not as the sole *source of generated code*. Some parts generate well. Some parts need human engineering. Knowing which is which saves weeks of fighting generators.
+
+---
+
+## Parser Architecture: Putting It All Together
+
+The complete parser pipeline for a production SDUI system has five stages:
+
+### Stage 1: Network Response Validation
+
+Before parsing, validate the raw JSON/data against basic structural requirements: is it valid JSON? Does it have the expected top-level fields (`screen`, `sections`)? Is the response size within acceptable limits? Is the nesting depth within bounds?
+
+Reject malformed responses early with clear error reporting. Don't let a corrupted response crash the parser in Stage 3.
+
+### Stage 2: Schema Deserialization
+
+Deserialize the raw JSON into your typed model hierarchy. This is where the discriminated union parsing happens -- reading the `type` field and dispatching to the correct subtype's deserializer.
+
+For known types, this produces strongly-typed model objects (`HeaderCard`, `ProductCarousel`, etc.). For unknown types (component types the client doesn't recognize), produce a generic `UnknownComponent` with the raw JSON preserved -- this allows the renderer to apply fallback behavior rather than crashing.
+
+### Stage 3: Tree Validation and Transformation
+
+After deserialization, walk the component tree and validate: are required properties present? Are enum values within expected ranges? Are action destinations within the allowed navigation graph? Are image URLs using HTTPS?
+
+This is also where you apply transformations: resolving semantic tokens against the current theme, filtering components based on client capabilities or feature flags, and injecting analytics tracking metadata.
+
+### Stage 4: Registry Lookup and View Construction
+
+Walk the validated tree and construct the native view hierarchy using the component registry. Each node looks up its renderer, passes its properties and recursively-constructed children, and receives a native view in return.
+
+Unknown components hit the fallback path: skip, placeholder, or upgrade prompt, based on the component's declared `fallback` behavior.
+
+### Stage 5: Layout and Display
+
+The constructed view hierarchy is handed to the platform's layout engine (Auto Layout, Compose layout, Flutter's rendering pipeline) for measurement and display. The SDUI system's job is done -- from here, it's standard platform rendering.
+
+### Error Propagation
+
+Each stage can fail. The architecture should support graceful degradation at every level:
+
+- Network failure -> show cached screen
+- Deserialization failure on one component -> skip that component, render the rest
+- Validation failure -> substitute a safe default or hide the section
+- Registry miss -> apply fallback behavior
+- Rendering failure -> show an error placeholder for that component
+
+Never let a single component failure crash the entire screen. The tree structure makes this natural -- each node is an independent unit that can succeed or fail independently.
+
+---
+
+## Testing the Parser
+
+### Unit Tests for Individual Renderers
+
+Each renderer, registered independently in the registry, is testable in isolation. Provide mock properties, render the output, and assert on the result. No other component types need to exist.
+
+### Integration Tests for the Full Pipeline
+
+Feed representative JSON responses through the complete pipeline (Stages 1-4) and verify that the correct view hierarchy is produced. Use snapshot tests to capture the rendered output and detect visual regressions.
+
+### Contract Tests Against the OpenAPI Spec
+
+Generate random valid responses from your OpenAPI spec (using tools like Prism or Schemathesis) and feed them through the parser. Every valid response should parse successfully. Every invalid response should fail gracefully without crashes.
+
+### Fuzz Testing for Robustness
+
+Feed malformed, truncated, deeply nested, and adversarial JSON through the parser. It should never crash, never hang, and never consume unbounded memory. Fuzz testing catches edge cases that unit tests miss -- especially in the recursive parsing and cycle detection logic.
+
+### Nested Component Tests
+
+Specifically test deeply nested structures: a `Section` containing a `Card` containing a `Stack` containing a `Badge` containing an `Icon`. Verify that properties propagate correctly through each level, that children render in the correct order, and that actions at any nesting depth fire correctly.
+
+---
+
+## Summary: The Decision Framework
+
+| Concern | Brute-Force Switch | Sealed Types + Exhaustive Match | Component Registry | Visitor Pattern |
+|---|---|---|---|---|
+| Adding new components | Modify central switch | Add sealed subclass + match case | Register new factory | Add method to all visitors |
+| Compile-time safety | None (string matching) | Full (compiler-enforced) | Partial (runtime lookup) | Full (compiler-enforced) |
+| Team scalability | Poor (merge conflicts) | Moderate (centralized match) | Excellent (decentralized) | Moderate (cross-cutting) |
+| Independent testability | None | Moderate | Excellent | Excellent |
+| Multiple operations | Must duplicate switch | Must duplicate match | One registry per operation | One visitor per operation |
+| Best for | Prototypes | Data model parsing | View rendering | Cross-cutting analysis |
+
+The production architecture uses sealed types for parsing (Stage 2), a component registry for rendering (Stage 4), and optionally the Visitor pattern for cross-cutting concerns (accessibility, analytics, validation). Each tool where it's strongest.
+
+The switch statement is for demos. Ship the registry.

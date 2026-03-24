@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - Architecture Articles</title>
+    <description>Articles tagged "Architecture" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/architecture.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance]]></title>
+      <description><![CDATA[How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Architecture</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield]]></title>
+      <description><![CDATA[A technical deep dive into SDUI parser architecture: component registries, recursive rendering, the Visitor pattern, and where OpenAPI code generators break with UI schemas.]]></description>
+      <link>https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store]]></title>
+      <description><![CDATA[A comprehensive guide to Server-Driven UI architecture for mobile apps: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, and migration strategies.]]></description>
+      <link>https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[The Foundation Paradox: Why AI Making Code Easier to Write Makes Your Fundamentals More Valuable, Not Less]]></title>
+      <description><![CDATA[Why strong software engineering fundamentals -- architecture, design patterns, security, scalability -- become more valuable, not less, as AI takes over the act of writing code.]]></description>
+      <link>https://vladblajovan.github.io/articles/strong-foundations-ai-era/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/strong-foundations-ai-era/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>AI</category>
+      <category>Architecture</category>
+      <category>Career</category>
+    </item>
+  </channel>
+</rss>

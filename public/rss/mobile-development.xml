@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - Mobile Development Articles</title>
+    <description>Articles tagged "Mobile Development" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/mobile-development.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance]]></title>
+      <description><![CDATA[How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Architecture</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought]]></title>
+      <description><![CDATA[A deep dive into WCAG 2.2 principle by principle, mapping each to Apple and Google accessibility guidance, and showing how AI assistants help you build compliance from the ground up.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-assisted-wcag-accessibility-compliance/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-assisted-wcag-accessibility-compliance/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Accessibility</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower]]></title>
+      <description><![CDATA[AI coding assistants have made it trivially cheap to build production-grade debug menus. This article walks through 15 use cases and how to build them.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-powered-debug-menus/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-powered-debug-menus/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Developer Tools</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Server-Driven UI Deep Dive: Parser Architecture, Nested Components, and the OpenAPI Generator Minefield]]></title>
+      <description><![CDATA[A technical deep dive into SDUI parser architecture: component registries, recursive rendering, the Visitor pattern, and where OpenAPI code generators break with UI schemas.]]></description>
+      <link>https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/sdui-deep-dive-parser-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Server-Driven UI: The Architecture That Decouples Your Mobile App From the App Store]]></title>
+      <description><![CDATA[A comprehensive guide to Server-Driven UI architecture for mobile apps: OpenAPI schemas, component registries, cross-platform rendering, versioning, caching, and migration strategies.]]></description>
+      <link>https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/server-driven-ui-mobile-guide/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Server-Driven UI</category>
+      <category>Architecture</category>
+      <category>Mobile Development</category>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vlad Blajovan - AI Articles</title>
+    <description>Articles tagged "AI" by Vlad Blajovan.</description>
+    <link>https://vladblajovan.github.io</link>
+    <atom:link href="https://vladblajovan.github.io/rss/ai.xml" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 24 Mar 2026 12:02:38 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance]]></title>
+      <description><![CDATA[How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-assisted-clean-architecture/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Architecture</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought]]></title>
+      <description><![CDATA[A deep dive into WCAG 2.2 principle by principle, mapping each to Apple and Google accessibility guidance, and showing how AI assistants help you build compliance from the ground up.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-assisted-wcag-accessibility-compliance/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-assisted-wcag-accessibility-compliance/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Accessibility</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[Ship Bulletproof Apps: How AI Coding Assistants Turn Debug Menus from Afterthought into Superpower]]></title>
+      <description><![CDATA[AI coding assistants have made it trivially cheap to build production-grade debug menus. This article walks through 15 use cases and how to build them.]]></description>
+      <link>https://vladblajovan.github.io/articles/ai-powered-debug-menus/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/ai-powered-debug-menus/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Developer Tools</category>
+      <category>AI</category>
+      <category>Mobile Development</category>
+    </item>
+    <item>
+      <title><![CDATA[The Claude Code Crash Course: From First Prompt to Autonomous Development Loops]]></title>
+      <description><![CDATA[Everything a developer needs to use Claude Code effectively: prompting, plan mode, worktrees, Ralph loops, Remote Control, agent teams, and multi-device orchestration.]]></description>
+      <link>https://vladblajovan.github.io/articles/claude-code-crash-course/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/claude-code-crash-course/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>Developer Tools</category>
+      <category>AI</category>
+    </item>
+    <item>
+      <title><![CDATA[The Foundation Paradox: Why AI Making Code Easier to Write Makes Your Fundamentals More Valuable, Not Less]]></title>
+      <description><![CDATA[Why strong software engineering fundamentals -- architecture, design patterns, security, scalability -- become more valuable, not less, as AI takes over the act of writing code.]]></description>
+      <link>https://vladblajovan.github.io/articles/strong-foundations-ai-era/</link>
+      <guid isPermaLink="true">https://vladblajovan.github.io/articles/strong-foundations-ai-era/</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <category>AI</category>
+      <category>Architecture</category>
+      <category>Career</category>
+    </item>
+  </channel>
+</rss>

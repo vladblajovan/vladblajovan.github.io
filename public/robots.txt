@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vladblajovan.github.io/sitemap.xml
