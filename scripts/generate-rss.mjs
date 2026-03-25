@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { marked } from 'marked'
 
 const SITE_URL = 'https://vladblajovan.github.io'
 const articlesDir = path.join(process.cwd(), 'content', 'articles')
@@ -10,9 +11,16 @@ function getAllArticles() {
   const files = fs.readdirSync(articlesDir).filter(f => f.endsWith('.mdx'))
   const articles = files.map(filename => {
     const slug = filename.replace(/\.mdx$/, '')
-    const content = fs.readFileSync(path.join(articlesDir, filename), 'utf8')
-    const { data } = matter(content)
-    return { slug, ...data }
+    const raw = fs.readFileSync(path.join(articlesDir, filename), 'utf8')
+    const { data, content } = matter(raw)
+    // Strip JSX/import lines that marked can't handle
+    const markdown = content
+      .replace(/^import\s.+$/gm, '')
+      .replace(/<[A-Z]\w+[^>]*\/>/g, '')
+      .replace(/<[A-Z]\w+[^>]*>[\s\S]*?<\/[A-Z]\w+>/g, '')
+      .trim()
+    const html = marked.parse(markdown)
+    return { slug, html, ...data }
   })
   return articles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
@@ -21,6 +29,7 @@ function generateFeed(articles, title, description, feedPath) {
   const items = articles.map(a => `    <item>
       <title><![CDATA[${a.title}]]></title>
       <description><![CDATA[${a.description}]]></description>
+      <content:encoded><![CDATA[${a.html}]]></content:encoded>
       <link>${SITE_URL}/articles/${a.slug}/</link>
       <guid isPermaLink="true">${SITE_URL}/articles/${a.slug}/</guid>
       <pubDate>${new Date(a.date).toUTCString()}</pubDate>
@@ -29,7 +38,7 @@ function generateFeed(articles, title, description, feedPath) {
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="/rss.xsl"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>${title}</title>
     <description>${description}</description>
