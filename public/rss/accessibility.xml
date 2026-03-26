@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Vlad Blajovan - Accessibility Articles</title>
@@ -7,7 +6,7 @@
     <link>https://vladblajovan.github.io</link>
     <atom:link href="https://vladblajovan.github.io/rss/accessibility.xml" rel="self" type="application/rss+xml"/>
     <language>en-us</language>
-    <lastBuildDate>Wed, 25 Mar 2026 17:32:23 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 26 Mar 2026 09:27:17 GMT</lastBuildDate>
     <item>
       <title><![CDATA[Accessible by Default: How AI Coding Assistants Make WCAG Compliance the Way You Build, Not an Afterthought]]></title>
       <description><![CDATA[A deep dive into WCAG 2.2 principle by principle, mapping each to Apple and Google accessibility guidance, and showing how AI assistants help you build compliance from the ground up.]]></description>
