@@ -11,7 +11,7 @@ export default function Footer() {
             <Link href="/resume" className="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Resume</Link>
             <Link href="/#about" className="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">About</Link>
             <Link href="/#contact" className="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">Contact</Link>
-            <Link href="/rss.xml" className="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">RSS</Link>
+            <Link href="/feed" className="text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">RSS</Link>
           </div>
           <div className="flex items-center gap-4">
             <a href="mailto:vlad.blajovan@outlook.com" aria-label="Email" className="text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
