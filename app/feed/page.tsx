@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getAllArticles } from '@/lib/articles'
 import FeedClient from './FeedClient'
 
 export const metadata: Metadata = {
@@ -7,5 +8,6 @@ export const metadata: Metadata = {
 }
 
 export default function FeedPage() {
-  return <FeedClient />
+  const articles = getAllArticles()
+  return <FeedClient articles={articles} />
 }

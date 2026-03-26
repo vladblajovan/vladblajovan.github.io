@@ -2,10 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import type { ArticleMeta } from '@/lib/articles'
 
 const FEED_URL = 'https://vladblajovan.github.io/rss.xml'
 
-export default function FeedClient() {
+interface Props {
+  articles: ArticleMeta[]
+}
+
+export default function FeedClient({ articles }: Props) {
   const [copied, setCopied] = useState(false)
 
   function handleCopy() {
@@ -71,6 +76,32 @@ export default function FeedClient() {
             <a href="https://newsblur.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">NewsBlur</a>,{' '}
             <a href="https://www.inoreader.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">Inoreader</a>
           </p>
+        </div>
+
+        <h2 className="mt-12 mb-6 text-xs font-semibold uppercase tracking-widest text-zinc-500">Recent articles</h2>
+        <div className="flex flex-col gap-4">
+          {articles.map((article) => (
+            <Link
+              key={article.slug}
+              href={`/articles/${article.slug}`}
+              className="group rounded-xl border border-zinc-200 p-6 transition hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+            >
+              <h3 className="mb-2 text-base font-semibold leading-snug group-hover:underline group-hover:underline-offset-2">
+                {article.title}
+              </h3>
+              <p className="mb-3 line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
+                {article.description}
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                <time>{new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                {article.tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-[11px] text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </Link>
+          ))}
         </div>
 
         <Link href="/articles" className="mt-12 inline-flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-zinc-900 dark:hover:text-white">
