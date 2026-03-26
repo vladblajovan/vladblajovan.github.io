@@ -83,10 +83,13 @@
             font-weight: 600;
             flex-shrink: 0;
           }
+          .url-wrap {
+            position: relative;
+          }
           .banner-url {
             display: block;
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 40px 10px 14px;
             background: #fff;
             border: 1px solid #e4e4e7;
             border-radius: 8px;
@@ -95,6 +98,28 @@
             color: #52525b;
             word-break: break-all;
             cursor: text;
+          }
+          .copy-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: #a1a1aa;
+            cursor: pointer;
+            transition: color 0.15s, background 0.15s;
+          }
+          .copy-btn:hover { color: #18181b; background: #e4e4e7; }
+          .copy-btn svg { width: 16px; height: 16px; }
+          @media (prefers-color-scheme: dark) {
+            .copy-btn:hover { color: #fff; background: #27272a; }
           }
           .readers {
             margin-top: 16px;
@@ -196,11 +221,21 @@
                 <span>Paste the URL and confirm</span>
               </div>
             </div>
-            <input class="banner-url" type="text" readonly="readonly">
-              <xsl:attribute name="value">
-                <xsl:value-of select="/rss/channel/atom:link/@href"/>
-              </xsl:attribute>
-            </input>
+            <div class="url-wrap">
+              <input class="banner-url" id="feed-url" type="text" readonly="readonly">
+                <xsl:attribute name="value">
+                  <xsl:value-of select="/rss/channel/atom:link/@href"/>
+                </xsl:attribute>
+              </input>
+              <button class="copy-btn" id="copy-btn" type="button" title="Copy URL">
+                <svg id="icon-copy" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75m11.25-1.5h-9.75a1.125 1.125 0 0 0-1.125 1.125v12.75c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V6.375c0-.621-.504-1.125-1.125-1.125Z"/>
+                </svg>
+                <svg id="icon-check" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                </svg>
+              </button>
+            </div>
             <p class="readers">
               Popular readers:
               <a href="https://feedly.com" target="_blank" rel="noopener">Feedly</a>,
@@ -235,6 +270,19 @@
             <xsl:text>&#8592; Back to site</xsl:text>
           </a>
         </div>
+        <script>
+          document.getElementById('copy-btn').addEventListener('click', function() {
+            var url = document.getElementById('feed-url').value;
+            navigator.clipboard.writeText(url).then(function() {
+              document.getElementById('icon-copy').style.display = 'none';
+              document.getElementById('icon-check').style.display = 'block';
+              setTimeout(function() {
+                document.getElementById('icon-copy').style.display = 'block';
+                document.getElementById('icon-check').style.display = 'none';
+              }, 2000);
+            });
+          });
+        </script>
       </body>
     </html>
   </xsl:template>
