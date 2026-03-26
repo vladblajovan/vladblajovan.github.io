@@ -20,7 +20,7 @@ export default function ArticlesClient({ articles, tags }: Props) {
   return (
     <main className="mx-auto max-w-5xl px-6 pt-32 pb-24">
       <section className="fade-in">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-3">
           <h1 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h1>
           <a
             href="/feed"

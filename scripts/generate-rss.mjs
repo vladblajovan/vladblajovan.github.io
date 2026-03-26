@@ -57,8 +57,8 @@ const articles = getAllArticles()
 // Global feed
 fs.writeFileSync(path.join(publicDir, 'rss.xml'), generateFeed(
   articles,
-  'Vlad Blajovan - Articles',
-  'Articles by Vlad Blajovan on software engineering, mobile development, and AI.',
+  'Side Quests',
+  'Vlad Blajovan\'s thoughts on crafting software, indie development, AI, and mobile architecture.',
   '/rss.xml'
 ))
 console.log('Generated /rss.xml')

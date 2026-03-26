@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Vlad Blajovan - Articles</title>
-    <description>Articles by Vlad Blajovan on software engineering, mobile development, and AI.</description>
+    <title>Side Quests</title>
+    <description>Vlad Blajovan's thoughts on crafting software, indie development, AI, and mobile architecture.</description>
     <link>https://vladblajovan.github.io</link>
     <atom:link href="https://vladblajovan.github.io/rss.xml" rel="self" type="application/rss+xml"/>
     <language>en-us</language>
-    <lastBuildDate>Thu, 26 Mar 2026 11:19:35 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 26 Mar 2026 12:48:05 GMT</lastBuildDate>
     <item>
       <title><![CDATA[Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance]]></title>
       <description><![CDATA[How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.]]></description>
