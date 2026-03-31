@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
 import { usePathname } from 'next/navigation'
@@ -8,8 +8,25 @@ import { trackEvent } from '@/app/lib/analytics'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [expandedWidth, setExpandedWidth] = useState<number>(0)
   const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
+  const collapsibleRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const measureRef = useCallback((node: HTMLSpanElement | null) => {
+    if (node) {
+      collapsibleRef.current = node
+      setExpandedWidth(node.scrollWidth)
+    }
+  }, [])
 
   const isHome = pathname === '/'
   const isArticles = pathname.startsWith('/articles')
@@ -33,10 +50,33 @@ export default function Navbar() {
       ]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/60 dark:bg-black/80">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:border-zinc-800/60 dark:bg-black/80 dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)]">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline">
-          Hi.
+        <Link href="/" className="text-5xl font-bold leading-tight tracking-tight text-zinc-900 dark:text-white no-underline flex items-baseline whitespace-nowrap">
+          <span>Hi</span>
+          <span
+            ref={measureRef}
+            className="inline-block overflow-hidden"
+            style={{
+              width: scrolled ? 0 : expandedWidth || undefined,
+              transition: scrolled
+                ? 'width 0.35s cubic-bezier(0.6, 0.04, 0.98, 0.335)'
+                : 'width 0.35s ease-out 0.06s',
+            }}
+          >
+            <span
+              className="inline-block"
+              style={{
+                transform: scrolled ? 'translateX(-100%)' : 'translateX(0)',
+                transition: scrolled
+                  ? 'transform 0.35s cubic-bezier(0.6, 0.04, 0.98, 0.335)'
+                  : 'transform 0.35s ease-out 0.06s',
+              }}
+            >
+              &nbsp;there
+            </span>
+          </span>
+          <span className="inline-block h-[0.22em] w-[0.22em] rounded-full bg-orange-500 ml-[0.05em] self-baseline" />
         </Link>
 
         {/* Desktop nav */}
