@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { ArticleMeta } from '@/lib/articles'
+import { trackEvent } from '@/app/lib/analytics'
 
 const FEED_URL = 'https://vladblajovan.github.io/rss.xml'
 
@@ -16,6 +17,7 @@ export default function FeedClient({ articles }: Props) {
   function handleCopy() {
     navigator.clipboard.writeText(FEED_URL).then(() => {
       setCopied(true)
+      trackEvent({ action: 'copy_feed_url', category: 'engagement' })
       setTimeout(() => setCopied(false), 2000)
     })
   }
@@ -71,10 +73,10 @@ export default function FeedClient({ articles }: Props) {
 
           <p className="mt-4 text-[13px] text-zinc-400 dark:text-zinc-500">
             Popular readers:{' '}
-            <a href="https://feedly.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">Feedly</a>,{' '}
-            <a href="https://netnewswire.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">NetNewsWire</a>,{' '}
-            <a href="https://newsblur.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">NewsBlur</a>,{' '}
-            <a href="https://www.inoreader.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">Inoreader</a>
+            <a href="https://feedly.com" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'rss_click', category: 'engagement', label: 'feedly' })} className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">Feedly</a>,{' '}
+            <a href="https://netnewswire.com" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'rss_click', category: 'engagement', label: 'netnewswire' })} className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">NetNewsWire</a>,{' '}
+            <a href="https://newsblur.com" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'rss_click', category: 'engagement', label: 'newsblur' })} className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">NewsBlur</a>,{' '}
+            <a href="https://www.inoreader.com" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'rss_click', category: 'engagement', label: 'inoreader' })} className="underline underline-offset-2 transition hover:text-zinc-900 dark:hover:text-white">Inoreader</a>
           </p>
         </div>
 

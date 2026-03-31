@@ -4,6 +4,7 @@ import { useState } from 'react'
 import ArticleCard from '@/components/ArticleCard'
 import TagFilter from '@/components/TagFilter'
 import type { ArticleMeta } from '@/lib/articles'
+import { trackEvent } from '@/app/lib/analytics'
 
 interface Props {
   articles: ArticleMeta[]
@@ -24,6 +25,7 @@ export default function ArticlesClient({ articles, tags }: Props) {
           <h1 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h1>
           <a
             href="/feed"
+            onClick={() => trackEvent({ action: 'rss_click', category: 'engagement', label: 'feed_button' })}
             className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -47,8 +49,8 @@ export default function ArticlesClient({ articles, tags }: Props) {
 
         <div className="mt-12">
           <p className="text-sm text-zinc-400 dark:text-zinc-500">Follow me on{' '}
-            <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" className="underline transition hover:text-zinc-900 dark:hover:text-white">GitHub</a> or{' '}
-            <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" className="underline transition hover:text-zinc-900 dark:hover:text-white">LinkedIn</a>{' '}
+            <a href="https://github.com/vladblajovan" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'social_click', category: 'engagement', label: 'github' })} className="underline transition hover:text-zinc-900 dark:hover:text-white">GitHub</a> or{' '}
+            <a href="https://www.linkedin.com/in/vlad-blajovan" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'social_click', category: 'engagement', label: 'linkedin' })} className="underline transition hover:text-zinc-900 dark:hover:text-white">LinkedIn</a>{' '}
             to get notified when new articles drop.
           </p>
         </div>

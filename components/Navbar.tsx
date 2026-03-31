@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
 import { usePathname } from 'next/navigation'
+import { trackEvent } from '@/app/lib/analytics'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -40,7 +41,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+          <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'outbound_click', category: 'engagement', label: 'buymeacoffee' })}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style={{ height: '28px' }} loading="lazy" />
           </a>
@@ -48,7 +49,7 @@ export default function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setMenuOpen(false); trackEvent({ action: 'nav_click', category: 'navigation', label: link.label.toLowerCase() }); }}
               className={`text-sm font-medium transition ${
                 link.active
                   ? 'text-zinc-900 dark:text-white'
@@ -59,7 +60,7 @@ export default function Navbar() {
             </Link>
           ))}
           <button
-            onClick={toggleTheme}
+            onClick={() => { toggleTheme(); trackEvent({ action: 'theme_toggle', category: 'engagement', label: theme === 'dark' ? 'light' : 'dark' }); }}
             aria-label="Toggle theme"
             className="flex items-center justify-center rounded-full border border-zinc-300 p-1.5 text-zinc-600 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-white"
           >
@@ -95,7 +96,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-black menu-open">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.buymeacoffee.com/vladblajovan" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'outbound_click', category: 'engagement', label: 'buymeacoffee' })}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style={{ height: '32px' }} loading="lazy" />
             </a>
@@ -103,7 +104,7 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
-                onClick={() => setMenuOpen(false)}
+                onClick={() => { setMenuOpen(false); trackEvent({ action: 'nav_click', category: 'navigation', label: link.label.toLowerCase() }); }}
                 className={`text-base font-medium transition ${
                   link.active
                     ? 'text-zinc-900 dark:text-white'
@@ -114,7 +115,7 @@ export default function Navbar() {
               </Link>
             ))}
             <button
-              onClick={toggleTheme}
+              onClick={() => { toggleTheme(); trackEvent({ action: 'theme_toggle', category: 'engagement', label: theme === 'dark' ? 'light' : 'dark' }); }}
               className="text-left text-base font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
               {theme === 'dark' ? 'Light mode' : 'Dark mode'}

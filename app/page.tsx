@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getAllArticles } from '@/lib/articles'
+import { TrackedSocialPills, TrackedContactPills, TrackedAppCard, TrackedArticleLink, TrackedViewAllArticles } from './HomeTracked'
 
 export default function Home() {
   const latestArticles = getAllArticles().slice(0, 3)
@@ -12,20 +13,14 @@ export default function Home() {
         <p className="relative max-w-xl text-lg text-zinc-600 leading-relaxed dark:text-zinc-400">
           I&apos;m Vlad, crafting software with a focus on building products that are genuinely useful, beautifully designed, and improve your life.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <SocialPill href="mailto:vlad.blajovan@outlook.com" icon="mail" label="Mail" />
-          <SocialPill href="https://github.com/vladblajovan" icon="github" label="GitHub" />
-          <SocialPill href="https://www.linkedin.com/in/vlad-blajovan" icon="linkedin" label="LinkedIn" />
-          <SocialPill href="https://www.threads.com/@vladblajovan" icon="threads" label="Threads" />
-          <SocialPill href="https://www.instagram.com/vladblajovan/" icon="instagram" label="Instagram" />
-        </div>
+        <TrackedSocialPills />
       </section>
 
       {/* Apps */}
       <section id="apps" className="mb-24 fade-in scroll-mt-24">
         <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <AppCard
+          <TrackedAppCard
             name="Ritualist"
             description="Privacy-first habit tracker for iOS. AI-powered insights, location reminders, and beautiful analytics — no social pressure."
             icon="/brand-icon.png"
@@ -57,45 +52,10 @@ export default function Home() {
         <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {latestArticles.map((article) => (
-            <Link
-              key={article.slug}
-              href={`/articles/${article.slug}`}
-              className="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col"
-            >
-              <div className="mb-3 flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
-                  <span key={tag} className="inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <h3 className="mb-2 text-base font-semibold leading-snug text-zinc-900 transition group-hover:text-zinc-900 dark:text-white dark:group-hover:text-white">
-                {article.title}
-              </h3>
-              <p className="mb-3 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">
-                {article.description}
-              </p>
-              <div className="mt-auto flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
-                <time dateTime={article.date}>
-                  {new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </time>
-                <span>&middot;</span>
-                <span>~{article.readTime} read</span>
-              </div>
-            </Link>
+            <TrackedArticleLink key={article.slug} article={article} />
           ))}
         </div>
-        <div className="mt-8">
-          <Link
-            href="/articles"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-          >
-            View all articles
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-            </svg>
-          </Link>
-        </div>
+        <TrackedViewAllArticles />
       </section>
 
       {/* About */}
@@ -117,13 +77,7 @@ export default function Home() {
         <p className="mb-6 max-w-md text-zinc-600 leading-relaxed dark:text-zinc-400">
           Got a question, a project idea, or just want to say hi? Reach out.
         </p>
-        <div className="flex flex-wrap gap-3">
-          <ContactPill href="mailto:vlad.blajovan@outlook.com" icon="mail" label="Mail" />
-          <ContactPill href="https://github.com/vladblajovan" icon="github" label="GitHub" />
-          <ContactPill href="https://www.linkedin.com/in/vlad-blajovan" icon="linkedin" label="LinkedIn" />
-          <ContactPill href="https://www.threads.com/@vladblajovan" icon="threads" label="Threads" />
-          <ContactPill href="https://www.instagram.com/vladblajovan/" icon="instagram" label="Instagram" />
-        </div>
+        <TrackedContactPills />
       </section>
     </main>
   )
@@ -188,30 +142,3 @@ function SocialIcon({ icon }: { icon: string }) {
   }
 }
 
-function SocialPill({ href, icon, label }: { href: string; icon: string; label: string }) {
-  const isExternal = href.startsWith('http')
-  return (
-    <a
-      href={href}
-      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
-    >
-      <SocialIcon icon={icon} />
-      {label}
-    </a>
-  )
-}
-
-function ContactPill({ href, icon, label }: { href: string; icon: string; label: string }) {
-  const isExternal = href.startsWith('http')
-  return (
-    <a
-      href={href}
-      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
-    >
-      <SocialIcon icon={icon} />
-      {label}
-    </a>
-  )
-}
