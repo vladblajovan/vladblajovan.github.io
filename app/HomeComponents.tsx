@@ -28,7 +28,7 @@ const socialLinks = [
   { href: 'https://www.instagram.com/vladblajovan/', icon: 'instagram', label: 'Instagram', trackLabel: 'instagram' },
 ]
 
-export function TrackedSocialPills() {
+export function SocialPills() {
   return (
     <div className="mt-8 flex flex-wrap gap-3">
       {socialLinks.map((link) => {
@@ -50,7 +50,7 @@ export function TrackedSocialPills() {
   )
 }
 
-export function TrackedContactPills() {
+export function ContactPills() {
   return (
     <div className="flex flex-wrap gap-3">
       {socialLinks.map((link) => {
@@ -72,17 +72,32 @@ export function TrackedContactPills() {
   )
 }
 
-export function TrackedAppCard({ name, description, icon, gradient, platforms, href }: {
+export function AppCard({ name, description, icon, gradient, platforms, href, comingSoon }: {
   name: string
   description: string
   icon: string
   gradient: string
   platforms: string[]
-  href: string
+  href?: string
+  comingSoon?: boolean
 }) {
   return (
-    <div className="group relative rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 flex flex-col dark:border-zinc-800 dark:hover:border-zinc-600">
-      <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'outbound_click', category: 'engagement', label: name.toLowerCase() })} className="absolute inset-0 rounded-2xl" aria-label={name} />
+    <div
+      className="group relative rounded-2xl border border-zinc-200 p-6 transition-all duration-200 shadow-lg -translate-y-0.5 hover:shadow-none hover:translate-y-0 hover:border-zinc-400 flex flex-col dark:border-zinc-800 dark:hover:border-zinc-600"
+      onClick={!href ? () => trackEvent({ action: 'app_click', category: 'engagement', label: name.toLowerCase() }) : undefined}
+    >
+      {comingSoon && (
+        <div className="absolute -top-1.5 right-6 z-10 flex">
+          <div className="relative">
+            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 border-l-[6px] border-l-transparent" />
+            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 border-r-[6px] border-r-transparent" />
+            <div className="relative bg-zinc-400 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm">
+              Coming Soon
+            </div>
+          </div>
+        </div>
+      )}
+      {href && <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'app_click', category: 'engagement', label: name.toLowerCase() })} className="absolute inset-0 rounded-2xl" aria-label={name} />}
       <div className="mb-4 flex items-center justify-between">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={icon} alt={name} className="h-14 w-14 rounded-xl" loading="lazy" />
@@ -91,29 +106,23 @@ export function TrackedAppCard({ name, description, icon, gradient, platforms, h
         <span className={`bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>{name}</span>
       </h3>
       <p className="mb-4 text-sm text-zinc-600 leading-relaxed dark:text-zinc-400">{description}</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {platforms.map((p) => (
-          <span key={p} className="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{p}</span>
-        ))}
-      </div>
-      <div className="mt-auto">
-        <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent({ action: 'outbound_click', category: 'engagement', label: name.toLowerCase() })} className="relative z-10 flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
-          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/>
-          </svg>
-          See more
-        </a>
+      <div className="mt-auto flex justify-end">
+        <div className="flex flex-wrap gap-2">
+          {platforms.map((p) => (
+            <span key={p} className="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{p}</span>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-export function TrackedArticleLink({ article }: { article: { slug: string; title: string; description: string; date: string; readTime: string; tags: string[] } }) {
+export function ArticleLink({ article }: { article: { slug: string; title: string; description: string; date: string; readTime: string; tags: string[] } }) {
   return (
     <Link
       href={`/articles/${article.slug}`}
       onClick={() => trackEvent({ action: 'article_click', category: 'content', label: article.slug })}
-      className="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col"
+      className="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 shadow-lg -translate-y-0.5 hover:shadow-none hover:translate-y-0 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col"
     >
       <div className="mb-3 flex flex-wrap gap-2">
         {article.tags.map((tag) => (
@@ -139,7 +148,7 @@ export function TrackedArticleLink({ article }: { article: { slug: string; title
   )
 }
 
-export function TrackedViewAllArticles() {
+export function ViewAllArticles() {
   return (
     <div className="mt-8">
       <Link

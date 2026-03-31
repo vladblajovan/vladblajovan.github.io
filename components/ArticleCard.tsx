@@ -5,7 +5,7 @@ export default function ArticleCard({ article }: { article: ArticleMeta }) {
   return (
     <Link
       href={`/articles/${article.slug}`}
-      className="article-card group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col"
+      className="group rounded-2xl border border-zinc-200 p-6 transition-all duration-200 shadow-lg -translate-y-0.5 hover:shadow-none hover:translate-y-0 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600 flex flex-col"
     >
       <div className="mb-3 flex flex-wrap gap-2">
         {article.tags.map((tag) => (

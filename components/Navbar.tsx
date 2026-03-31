@@ -10,16 +10,36 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [expandedWidth, setExpandedWidth] = useState<number>(0)
+  const [greeting, setGreeting] = useState('there')
+  const isFirst = useRef(true)
   const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
   const collapsibleRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50)
+    let wasScrolled = window.scrollY > 50
+    const onScroll = () => {
+      const isScrolled = window.scrollY > 50
+      setScrolled(isScrolled)
+      if (!isScrolled && wasScrolled) {
+        if (isFirst.current) {
+          isFirst.current = false
+        } else {
+          setGreeting(prev => prev === 'there' ? 'again' : 'there')
+        }
+      }
+      wasScrolled = isScrolled
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (collapsibleRef.current) {
+      setExpandedWidth(collapsibleRef.current.scrollWidth)
+    }
+  }, [greeting])
 
   const measureRef = useCallback((node: HTMLSpanElement | null) => {
     if (node) {
@@ -73,10 +93,10 @@ export default function Navbar() {
                   : 'transform 0.35s ease-out 0.06s',
               }}
             >
-              &nbsp;there
+              &nbsp;{greeting}
             </span>
           </span>
-          <span className="inline-block h-[0.22em] w-[0.22em] rounded-full bg-orange-500 ml-[0.05em] self-baseline" />
+          <span className="inline-block h-[0.22em] w-[0.22em] rounded-full bg-zinc-400 ml-[0.05em] self-baseline" />
         </Link>
 
         {/* Desktop nav */}

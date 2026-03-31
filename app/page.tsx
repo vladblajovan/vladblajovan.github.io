@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getAllArticles } from '@/lib/articles'
-import { TrackedSocialPills, TrackedContactPills, TrackedAppCard, TrackedArticleLink, TrackedViewAllArticles } from './HomeTracked'
+import { SocialPills, ContactPills, AppCard, ArticleLink, ViewAllArticles } from './HomeComponents'
 
 export default function Home() {
   const latestArticles = getAllArticles().slice(0, 3)
@@ -13,14 +13,14 @@ export default function Home() {
         <p className="relative max-w-xl text-lg text-zinc-600 leading-relaxed dark:text-zinc-400">
           I&apos;m Vlad, crafting software with a focus on building products that are genuinely useful, beautifully designed, and improve your life.
         </p>
-        <TrackedSocialPills />
+        <SocialPills />
       </section>
 
       {/* Apps */}
       <section id="apps" className="mb-24 fade-in scroll-mt-24">
         <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <TrackedAppCard
+          <AppCard
             name="Ritualist"
             description="Privacy-first habit tracker for iOS. AI-powered insights, location reminders, and beautiful analytics — no social pressure."
             icon="/brand-icon.png"
@@ -52,10 +52,10 @@ export default function Home() {
         <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Articles</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {latestArticles.map((article) => (
-            <TrackedArticleLink key={article.slug} article={article} />
+            <ArticleLink key={article.slug} article={article} />
           ))}
         </div>
-        <TrackedViewAllArticles />
+        <ViewAllArticles />
       </section>
 
       {/* About */}
@@ -77,51 +77,9 @@ export default function Home() {
         <p className="mb-6 max-w-md text-zinc-600 leading-relaxed dark:text-zinc-400">
           Got a question, a project idea, or just want to say hi? Reach out.
         </p>
-        <TrackedContactPills />
+        <ContactPills />
       </section>
     </main>
-  )
-}
-
-function AppCard({ name, description, icon, gradient, platforms, href, comingSoon }: {
-  name: string
-  description: string
-  icon: string
-  gradient: string
-  platforms: string[]
-  href?: string
-  comingSoon?: boolean
-}) {
-  return (
-    <div className="group relative rounded-2xl border border-zinc-200 p-6 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:-translate-y-0.5 flex flex-col dark:border-zinc-800 dark:hover:border-zinc-600">
-      {href && <a href={href} target="_blank" rel="noopener noreferrer" className="absolute inset-0 rounded-2xl" aria-label={name} />}
-      <div className="mb-4 flex items-center justify-between">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={icon} alt={name} className="h-14 w-14 rounded-xl" loading="lazy" />
-        {comingSoon && (
-          <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-zinc-900">Coming Soon</span>
-        )}
-      </div>
-      <h3 className="mb-2 text-lg font-semibold">
-        <span className={`bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>{name}</span>
-      </h3>
-      <p className="mb-4 text-sm text-zinc-600 leading-relaxed dark:text-zinc-400">{description}</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {platforms.map((p) => (
-          <span key={p} className="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{p}</span>
-        ))}
-      </div>
-      {href && (
-        <div className="mt-auto">
-          <a href={href} target="_blank" rel="noopener noreferrer" className="relative z-10 flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/>
-            </svg>
-            See more
-          </a>
-        </div>
-      )}
-    </div>
   )
 }
 
