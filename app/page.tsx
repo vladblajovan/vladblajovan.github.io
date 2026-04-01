@@ -19,7 +19,7 @@ export default function Home() {
       {/* Apps */}
       <section id="apps" className="mb-24 fade-in scroll-mt-24">
         <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           <AppCard
             name="Ritualist"
             description="Privacy-first habit tracker for iOS. AI-powered insights, location reminders, and beautiful analytics — no social pressure."

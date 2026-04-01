@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 html {
+  font-size: 106%;
   scroll-behavior: smooth;
 }
 

@@ -6,7 +6,7 @@
     <link>https://vladblajovan.github.io</link>
     <atom:link href="https://vladblajovan.github.io/rss.xml" rel="self" type="application/rss+xml"/>
     <language>en-us</language>
-    <lastBuildDate>Tue, 31 Mar 2026 16:10:57 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 01 Apr 2026 05:20:20 GMT</lastBuildDate>
     <item>
       <title><![CDATA[Build It Right the First Time: How AI Coding Assistants Make Clean Architecture the Path of Least Resistance]]></title>
       <description><![CDATA[How AI coding assistants eliminate the tradeoff between clean architecture and development speed, making proper abstractions, testing, and maintainability the fastest way to build.]]></description>
