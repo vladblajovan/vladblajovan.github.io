@@ -89,9 +89,9 @@ export function AppCard({ name, description, icon, gradient, platforms, href, co
       {comingSoon && (
         <div className="absolute -top-1.5 right-6 z-10 flex">
           <div className="relative">
-            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 border-l-[6px] border-l-transparent" />
-            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 border-r-[6px] border-r-transparent" />
-            <div className="relative bg-zinc-400 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm">
+            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 group-hover:border-b-red-700 border-l-[6px] border-l-transparent transition-colors duration-200" />
+            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 group-hover:border-b-red-700 border-r-[6px] border-r-transparent transition-colors duration-200" />
+            <div className="relative bg-zinc-400 group-hover:bg-red-500 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm transition-colors duration-200">
               Coming Soon
             </div>
           </div>
