@@ -9,7 +9,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [expandedWidth, setExpandedWidth] = useState<number>(0)
-  const [greeting, setGreeting] = useState('there')
+  const [greeting, setGreeting] = useState('')
   const isFirst = useRef(true)
   const pathname = usePathname()
   const collapsibleRef = useRef<HTMLSpanElement>(null)
@@ -22,6 +22,7 @@ export default function Navbar() {
       if (!isScrolled && wasScrolled) {
         if (isFirst.current) {
           isFirst.current = false
+          setGreeting('there')
         } else {
           setGreeting(prev => prev === 'there' ? 'again' : 'there')
         }
