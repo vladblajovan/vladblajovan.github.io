@@ -18,11 +18,12 @@ export default function Home() {
 
       {/* Apps */}
       <section id="apps" className="mb-24 fade-in scroll-mt-24">
-        <h2 className="mb-8 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps</h2>
+        <p className="mb-8 text-sm text-zinc-400 dark:text-zinc-500">Indie apps crafted with care, from idea to App Store.</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AppCard
             name="Ritualist"
-            description="Privacy-first habit tracker for iOS. AI-powered insights, location reminders, and beautiful analytics — no social pressure."
+            description="A habit tracker that respects your privacy. AI-powered insights, location-based reminders, and detailed analytics — without the social pressure."
             icon="/brand-icon.png"
             gradient="from-[#0A95C2] to-[#0556A6]"
             platforms={['iPhone', 'iPad']}
@@ -30,7 +31,7 @@ export default function Home() {
           />
           <AppCard
             name="AppDock"
-            description="The dock you needed. A smarter way to launch and manage your apps on macOS."
+            description="A better app launcher for macOS. Organize, search, and switch between your apps faster than Spotlight or the Dock."
             icon="/appdock-icon.png"
             gradient="from-[#7C6FE0] to-[#4F46E5]"
             platforms={['macOS']}
@@ -38,7 +39,7 @@ export default function Home() {
           />
           <AppCard
             name="StickyNotes"
-            description="Quick, always-on-screen notes for macOS. Capture thoughts without breaking your flow."
+            description="Lightweight sticky notes that float on your desktop. Jot down ideas without leaving what you're working on."
             icon="/stickynotes-icon.png"
             gradient="from-[#FFD60A] to-[#FF9F0A]"
             platforms={['macOS']}

@@ -83,15 +83,15 @@ export function AppCard({ name, description, icon, gradient, platforms, href, co
 }) {
   return (
     <div
-      className="group relative rounded-2xl border border-zinc-200 p-6 transition-all duration-200 shadow-lg -translate-y-0.5 hover:shadow-none hover:translate-y-0 hover:border-zinc-400 flex flex-col dark:border-zinc-800 dark:hover:border-zinc-600"
+      className="group relative rounded-2xl border border-zinc-200 p-6 transition-all duration-200 shadow-lg -translate-y-0.5 hover:shadow-none hover:translate-y-0 hover:border-zinc-400 flex flex-col dark:border-zinc-800 dark:hover:border-zinc-600 cursor-pointer"
       onClick={!href ? () => trackEvent({ action: 'app_click', category: 'engagement', label: name.toLowerCase() }) : undefined}
     >
       {comingSoon && (
         <div className="absolute -top-1.5 right-6 z-10 flex">
           <div className="relative">
-            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 group-hover:border-b-red-700 border-l-[6px] border-l-transparent transition-colors duration-200" />
-            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[5px] border-b-zinc-500 group-hover:border-b-red-700 border-r-[6px] border-r-transparent transition-colors duration-200" />
-            <div className="relative bg-zinc-400 group-hover:bg-red-500 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm transition-colors duration-200">
+            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-red-700 border-l-[6px] border-l-transparent transition-colors duration-200" />
+            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-red-700 border-r-[6px] border-r-transparent transition-colors duration-200" />
+            <div className="relative bg-zinc-400 group-hover:bg-red-500 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm transition-colors duration-200 -mx-px">
               Coming Soon
             </div>
           </div>
