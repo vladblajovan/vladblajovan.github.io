@@ -92,7 +92,7 @@ export default function Navbar() {
                   : 'transform 0.35s ease-out 0.06s',
               }}
             >
-              &nbsp;{greeting}
+              {greeting && <>&nbsp;{greeting}</>}
             </span>
           </span>
           <span className="inline-block h-[0.22em] w-[0.22em] rounded-full bg-zinc-400 ml-[0.05em] self-baseline" />
