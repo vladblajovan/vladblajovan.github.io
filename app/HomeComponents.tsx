@@ -39,10 +39,10 @@ export function SocialPills() {
             href={link.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             onClick={() => trackEvent({ action: 'social_click', category: 'engagement', label: link.trackLabel })}
-            className="flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
+            className="flex items-center gap-2 rounded-full border border-zinc-300 px-3 py-2 sm:px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
           >
             <SocialIcon icon={link.icon} />
-            {link.label}
+            <span className="hidden sm:inline">{link.label}</span>
           </a>
         )
       })}
@@ -61,10 +61,10 @@ export function ContactPills() {
             href={link.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             onClick={() => trackEvent({ action: 'social_click', category: 'engagement', label: link.trackLabel })}
-            className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-3 py-3 sm:px-6 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-white"
           >
             <SocialIcon icon={link.icon} />
-            {link.label}
+            <span className="hidden sm:inline">{link.label}</span>
           </a>
         )
       })}
@@ -89,9 +89,9 @@ export function AppCard({ name, description, icon, gradient, platforms, href, co
       {comingSoon && (
         <div className="absolute -top-1.5 right-6 z-10 flex">
           <div className="relative">
-            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-red-700 border-l-[6px] border-l-transparent transition-colors duration-200" />
-            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-red-700 border-r-[6px] border-r-transparent transition-colors duration-200" />
-            <div className="relative bg-zinc-400 group-hover:bg-red-500 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm transition-colors duration-200 -mx-px">
+            <div className="absolute -left-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-orange-700 border-l-[6px] border-l-transparent transition-colors duration-200" />
+            <div className="absolute -right-1.5 top-0 w-0 h-0 border-b-[6px] border-b-zinc-500 group-hover:border-b-orange-700 border-r-[6px] border-r-transparent transition-colors duration-200" />
+            <div className="relative bg-zinc-400 group-hover:bg-orange-500 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white rounded-b-md shadow-sm transition-colors duration-200 -mx-px">
               Coming Soon
             </div>
           </div>
