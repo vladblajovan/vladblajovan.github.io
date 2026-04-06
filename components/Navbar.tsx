@@ -19,7 +19,9 @@ export default function Navbar() {
     const onScroll = () => {
       const isScrolled = window.scrollY > 50
       setScrolled(isScrolled)
-      if (!isScrolled && wasScrolled) {
+      if (isScrolled && !wasScrolled) {
+        // Update greeting while text is collapsing (hidden), so
+        // expandedWidth is measured before the next expand transition
         if (isFirst.current) {
           isFirst.current = false
           setGreeting('there')
