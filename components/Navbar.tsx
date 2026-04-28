@@ -15,26 +15,29 @@ export default function Navbar() {
   const collapsibleRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    let wasScrolled = window.scrollY > 50
     const onScroll = () => {
-      const isScrolled = window.scrollY > 50
-      setScrolled(isScrolled)
-      if (isScrolled && !wasScrolled) {
-        // Update greeting while text is collapsing (hidden), so
-        // expandedWidth is measured before the next expand transition
-        if (isFirst.current) {
-          isFirst.current = false
-          setGreeting('there')
-        } else {
-          setGreeting(prev => prev === 'there' ? 'again' : 'there')
-        }
-      }
-      wasScrolled = isScrolled
+      setScrolled(window.scrollY > 50)
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (!scrolled) return
+    // Wait for collapse to finish, then swap greeting while it's
+    // hidden (width=0) so the next expand reveals the new text
+    // without a visible mid-animation switch.
+    const t = setTimeout(() => {
+      if (isFirst.current) {
+        isFirst.current = false
+        setGreeting('there')
+      } else {
+        setGreeting(prev => prev === 'there' ? 'again' : 'there')
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [scrolled])
 
   useEffect(() => {
     if (collapsibleRef.current) {
