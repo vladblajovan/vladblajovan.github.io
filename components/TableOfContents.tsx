@@ -24,6 +24,7 @@ export default function TableOfContents() {
         }
         return { id: el.id, text: el.textContent || '' }
       })
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-commit DOM scan; rendered MDX h2s aren't available at render time
     setHeadings(items)
 
     if (items.length === 0) return

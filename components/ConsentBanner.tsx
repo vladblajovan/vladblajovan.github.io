@@ -1,29 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { getConsent, setConsent, removeGACookies } from '@/app/lib/analytics'
 
-export default function ConsentBanner({ onConsent }: { onConsent: (granted: boolean) => void }) {
-  const [visible, setVisible] = useState(false)
+function subscribe(cb: () => void) {
+  window.addEventListener('storage', cb)
+  window.addEventListener('consent-change', cb)
+  return () => {
+    window.removeEventListener('storage', cb)
+    window.removeEventListener('consent-change', cb)
+  }
+}
 
-  useEffect(() => {
-    if (getConsent() === null) {
-      setVisible(true)
-    }
-  }, [])
+function getSnapshot(): boolean {
+  return getConsent() === null
+}
+
+function getServerSnapshot(): boolean {
+  return false
+}
+
+export default function ConsentBanner({ onConsent }: { onConsent: (granted: boolean) => void }) {
+  const visible = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   function handleAccept() {
     setConsent('granted')
-    setVisible(false)
+    window.dispatchEvent(new Event('consent-change'))
     onConsent(true)
   }
 
   function handleDecline() {
     setConsent('denied')
     removeGACookies()
-    setVisible(false)
+    window.dispatchEvent(new Event('consent-change'))
     onConsent(false)
   }
 

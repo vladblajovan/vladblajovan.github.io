@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useSyncExternalStore } from 'react'
 
 type Theme = 'light' | 'dark'
 
@@ -16,39 +16,51 @@ export function useTheme() {
   return useContext(ThemeContext)
 }
 
+function subscribe(cb: () => void) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
+  mq.addEventListener('change', cb)
+  window.addEventListener('storage', cb)
+  window.addEventListener('theme-change', cb)
+  return () => {
+    mq.removeEventListener('change', cb)
+    window.removeEventListener('storage', cb)
+    window.removeEventListener('theme-change', cb)
+  }
+}
+
+function getSnapshot(): Theme {
+  const stored = localStorage.getItem('theme') as Theme | null
+  if (stored) return stored
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function getServerSnapshot(): Theme {
+  return 'light'
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
+  // The inline script in app/layout.tsx applies the dark class on first paint
+  // so React must not drive the class from `theme` (it would briefly flip
+  // the class to the server-snapshot value during hydration). Instead, only
+  // react to live system-preference changes when no user override is stored.
   useEffect(() => {
-    setMounted(true)
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const stored = localStorage.getItem('theme') as Theme | null
-    const initial = stored || (isDark ? 'dark' : 'light')
-    setTheme(initial)
-    document.documentElement.classList.toggle('dark', initial === 'dark')
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => {
       if (!localStorage.getItem('theme')) {
-        const newTheme = e.matches ? 'dark' : 'light'
-        setTheme(newTheme)
-        document.documentElement.classList.toggle('dark', newTheme === 'dark')
+        document.documentElement.classList.toggle('dark', mq.matches)
       }
     }
-    mediaQuery.addEventListener('change', handler)
-    return () => mediaQuery.removeEventListener('change', handler)
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    document.documentElement.classList.toggle('dark', newTheme === 'dark')
-  }
-
-  if (!mounted) {
-    return <>{children}</>
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    localStorage.setItem('theme', next)
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    window.dispatchEvent(new Event('theme-change'))
   }
 
   return (
